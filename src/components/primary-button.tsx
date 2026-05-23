@@ -1,4 +1,10 @@
-import { ActivityIndicator, Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand, FontSize, Radius, Spacing } from '@/constants/theme';
@@ -10,7 +16,7 @@ type Props = {
   variant?: 'primary' | 'secondary';
   loading?: boolean;
   disabled?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 };
 
 // DESIGN.md §Components:

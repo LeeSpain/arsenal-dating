@@ -16,6 +16,7 @@ type ProfileStatus = {
   onboardingCompleted: boolean;
   onboardingStep: string;
   isAdmin: boolean;
+  isSuspended: boolean;
 };
 
 type SessionContextValue = {
@@ -32,17 +33,24 @@ async function fetchProfileStatus(): Promise<ProfileStatus> {
   // Owner-only RLS: this only ever returns the caller's own row.
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, onboarding_completed, onboarding_step, is_admin')
+    .select('id, onboarding_completed, onboarding_step, is_admin, is_suspended')
     .maybeSingle();
 
   if (error || !data) {
-    return { exists: false, onboardingCompleted: false, onboardingStep: 'profile', isAdmin: false };
+    return {
+      exists: false,
+      onboardingCompleted: false,
+      onboardingStep: 'profile',
+      isAdmin: false,
+      isSuspended: false,
+    };
   }
   return {
     exists: true,
     onboardingCompleted: !!data.onboarding_completed,
     onboardingStep: (data.onboarding_step as string) ?? 'profile',
     isAdmin: !!data.is_admin,
+    isSuspended: !!data.is_suspended,
   };
 }
 

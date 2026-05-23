@@ -16,6 +16,7 @@ export default function TabsLayout() {
 
   if (loading) return null;
   if (!session) return <Redirect href="/welcome" />;
+  if (profileStatus?.isSuspended) return <Redirect href="/suspended" />;
   // Deck is locked until onboarding is complete; index.tsx resumes the right step.
   if (!profileStatus?.onboardingCompleted) return <Redirect href="/" />;
 

@@ -18,10 +18,26 @@ export default function You() {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [purging, setPurging] = useState(false);
+  const [purgeNotice, setPurgeNotice] = useState<string | null>(null);
 
   async function onSignOut() {
     await signOut();
     router.replace('/welcome');
+  }
+
+  async function onPurge() {
+    setPurging(true);
+    setError(null);
+    const { data, error: purgeErr } = await supabase.functions.invoke('purge-orphans', {
+      method: 'POST',
+    });
+    setPurging(false);
+    if (purgeErr) {
+      setError('Purge failed.');
+      return;
+    }
+    setPurgeNotice(`Purged ${data?.purged ?? 0} orphaned image(s).`);
   }
 
   async function onDelete() {
@@ -44,11 +60,27 @@ export default function You() {
       note="Profile editing and report/block are shells (step 3+). Sign out and account deletion below are live."
     >
       {profileStatus?.isAdmin ? (
-        <PrimaryButton
-          label="Kit review queue"
-          onPress={() => router.push('/admin/kit-review')}
-        />
+        <>
+          <PrimaryButton label="Kit review queue" onPress={() => router.push('/admin/kit-review')} />
+          <PrimaryButton label="Reports queue" onPress={() => router.push('/admin/reports')} />
+          <PrimaryButton
+            label="Purge orphaned images"
+            variant="secondary"
+            loading={purging}
+            onPress={onPurge}
+          />
+          {purgeNotice ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {purgeNotice}
+            </ThemedText>
+          ) : null}
+        </>
       ) : null}
+      <PrimaryButton
+        label="Blocked users"
+        variant="secondary"
+        onPress={() => router.push('/blocked')}
+      />
       <PrimaryButton
         label="About this project"
         variant="secondary"

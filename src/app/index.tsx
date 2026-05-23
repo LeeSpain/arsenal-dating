@@ -17,6 +17,7 @@ export default function Index() {
     );
   }
   if (!session) return <Redirect href="/welcome" />;
+  if (profileStatus?.isSuspended) return <Redirect href="/suspended" />;
   if (!profileStatus?.exists) return <Redirect href="/age-gate" />;
   if (!profileStatus.onboardingCompleted) {
     // Resume at the step they left off on.

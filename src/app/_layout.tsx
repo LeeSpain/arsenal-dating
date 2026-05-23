@@ -27,6 +27,12 @@ export default function RootLayout() {
             name="admin/kit-review"
             options={{ headerShown: true, title: 'Kit review' }}
           />
+          <Stack.Screen
+            name="admin/reports"
+            options={{ headerShown: true, title: 'Reports' }}
+          />
+          <Stack.Screen name="blocked" options={{ headerShown: true, title: 'Blocked' }} />
+          <Stack.Screen name="suspended" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style="light" />
         </ThemeProvider>

@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { OptionGroup } from '@/components/option-group';
+import { PrimaryButton } from '@/components/primary-button';
+import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
@@ -24,6 +27,7 @@ import {
   sendMessage,
   subscribeMessages,
 } from '@/lib/messages';
+import { REPORT_REASONS, blockUser, reportUser } from '@/lib/safety';
 import { PHOTOS_BUCKET, signedUrl } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
@@ -46,6 +50,13 @@ export default function Chat() {
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showBlock, setShowBlock] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportThenLeave, setReportThenLeave] = useState(false);
+  const [reason, setReason] = useState<string[]>([]);
+  const [details, setDetails] = useState('');
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const addMessage = useCallback((m: Message) => {
     setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
@@ -106,6 +117,52 @@ export default function Chat() {
     setSending(false);
   }
 
+  async function doBlock(thenReport: boolean) {
+    if (!myId || !other) return;
+    setActionBusy(true);
+    setActionError(null);
+    try {
+      await blockUser(myId, other.id);
+    } catch {
+      setActionBusy(false);
+      setActionError('Could not block. Please try again.');
+      return;
+    }
+    setActionBusy(false);
+    setShowBlock(false);
+    if (thenReport) {
+      setReportThenLeave(true);
+      setShowReport(true);
+    } else {
+      router.replace('/matches');
+    }
+  }
+
+  async function submitReport() {
+    if (!myId || !other || reason.length === 0) {
+      setActionError('Pick a reason.');
+      return;
+    }
+    setActionBusy(true);
+    setActionError(null);
+    try {
+      await reportUser(myId, other.id, reason[0], details);
+    } catch {
+      setActionBusy(false);
+      setActionError('Could not send the report. Please try again.');
+      return;
+    }
+    setActionBusy(false);
+    setShowReport(false);
+    setReason([]);
+    setDetails('');
+    if (reportThenLeave) {
+      router.replace('/matches');
+    } else {
+      setNotice('Report sent to the team. Thanks for keeping it safe.');
+    }
+  }
+
   const hasMessages = messages.length > 0;
   const role = firstSenderRole(myGender, other?.gender ?? null);
   const waiting = !hasMessages && role === 'them';
@@ -161,7 +218,8 @@ export default function Chat() {
               style={styles.menuItem}
               onPress={() => {
                 setMenuOpen(false);
-                setNotice('Report & block arrive in the next update (safety step).');
+                setReportThenLeave(false);
+                setShowReport(true);
               }}
             >
               <ThemedText>Report {name}</ThemedText>
@@ -170,7 +228,7 @@ export default function Chat() {
               style={styles.menuItem}
               onPress={() => {
                 setMenuOpen(false);
-                setNotice('Report & block arrive in the next update (safety step).');
+                setShowBlock(true);
               }}
             >
               <ThemedText>Block {name}</ThemedText>
@@ -263,6 +321,60 @@ export default function Chat() {
             </View>
           )}
         </KeyboardAvoidingView>
+
+        {showBlock ? (
+          <View style={styles.overlay}>
+            <ThemedView style={styles.sheet}>
+              <ThemedText style={styles.sheetTitle}>Block {name}?</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                They won’t be able to see you or contact you, and your match will be removed.
+                They get no way back.
+              </ThemedText>
+              {actionError ? <ThemedText style={styles.error}>{actionError}</ThemedText> : null}
+              <PrimaryButton label="Block" loading={actionBusy} onPress={() => doBlock(false)} />
+              <PrimaryButton label="Block & report" variant="secondary" onPress={() => doBlock(true)} />
+              <PrimaryButton
+                label="Cancel"
+                variant="secondary"
+                onPress={() => {
+                  setShowBlock(false);
+                  setActionError(null);
+                }}
+              />
+            </ThemedView>
+          </View>
+        ) : null}
+
+        {showReport ? (
+          <View style={styles.overlay}>
+            <ThemedView style={styles.sheet}>
+              <ThemedText style={styles.sheetTitle}>Report {name}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                Why are you reporting? This goes to the team.
+              </ThemedText>
+              <OptionGroup options={REPORT_REASONS} selected={reason} onChange={setReason} />
+              <TextField
+                label="Details (optional)"
+                value={details}
+                onChangeText={setDetails}
+                multiline
+                placeholder="Anything that helps us review"
+                style={styles.detailsInput}
+              />
+              {actionError ? <ThemedText style={styles.error}>{actionError}</ThemedText> : null}
+              <PrimaryButton label="Send report" loading={actionBusy} onPress={submitReport} />
+              <PrimaryButton
+                label="Cancel"
+                variant="secondary"
+                onPress={() => {
+                  setShowReport(false);
+                  setActionError(null);
+                  setReportThenLeave(false);
+                }}
+              />
+            </ThemedView>
+          </View>
+        ) : null}
       </SafeAreaView>
     </ThemedView>
   );
@@ -328,4 +440,24 @@ const styles = StyleSheet.create({
   },
   sendDisabled: { opacity: 0.45 },
   sendText: { color: '#fff', fontWeight: '700' },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.three,
+  },
+  sheet: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: Radius.card,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  sheetTitle: { fontSize: 20, fontWeight: '800' },
+  detailsInput: { minHeight: 72, paddingTop: Spacing.one, textAlignVertical: 'top' },
 });

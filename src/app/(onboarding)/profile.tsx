@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { CityPicker, type City } from '@/components/city-picker';
 import { OptionGroup } from '@/components/option-group';
 import { PrimaryButton } from '@/components/primary-button';
 import { ScreenShell } from '@/components/screen-shell';
@@ -48,6 +49,7 @@ export default function ProfileCreation() {
   const [displayName, setDisplayName] = useState('');
   const [gender, setGender] = useState<string[]>([]);
   const [lookingFor, setLookingFor] = useState<string[]>([]);
+  const [city, setCity] = useState<City | null>(null);
   const [bio, setBio] = useState('');
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +61,7 @@ export default function ProfileCreation() {
     (async () => {
       const { data: prof } = await supabase
         .from('profiles')
-        .select('id, display_name, gender, looking_for, bio')
+        .select('id, display_name, gender, looking_for, bio, location, city_lat, city_lng')
         .maybeSingle();
       if (prof) {
         setProfileId(prof.id);
@@ -67,6 +69,9 @@ export default function ProfileCreation() {
         setGender(prof.gender ? [prof.gender] : []);
         setLookingFor(prof.looking_for ? [prof.looking_for] : []);
         setBio(prof.bio ?? '');
+        if (prof.location && prof.city_lat != null && prof.city_lng != null) {
+          setCity({ name: prof.location, country: '', lat: prof.city_lat, lng: prof.city_lng });
+        }
         await loadPhotos(prof.id);
       }
       setLoading(false);
@@ -137,6 +142,7 @@ export default function ProfileCreation() {
     if (!displayName.trim()) return setError('Add a display name.');
     if (gender.length === 0) return setError('Select your gender.');
     if (photos.length === 0) return setError('Add at least one photo.');
+    if (!city) return setError('Select your city.');
 
     setBusy(true);
     const { error: upErr } = await supabase
@@ -146,6 +152,9 @@ export default function ProfileCreation() {
         gender: gender[0],
         looking_for: lookingFor[0] ?? null,
         bio: bio.trim() || null,
+        location: city.name,
+        city_lat: city.lat,
+        city_lng: city.lng,
         onboarding_step: 'kit_photo',
       })
       .eq('id', profileId!);
@@ -215,6 +224,8 @@ export default function ProfileCreation() {
         Looking for
       </ThemedText>
       <OptionGroup options={LOOKING_FOR} selected={lookingFor} onChange={setLookingFor} />
+
+      <CityPicker value={city} onSelect={setCity} />
 
       <TextField
         label="Bio"

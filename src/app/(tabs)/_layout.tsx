@@ -12,11 +12,12 @@ function Dot({ color }: { color: ColorValue }) {
 }
 
 export default function TabsLayout() {
-  const { session, loading } = useSession();
+  const { session, profileStatus, loading } = useSession();
 
   if (loading) return null;
   if (!session) return <Redirect href="/welcome" />;
-  // Step 2 guards on session only. Onboarding-completion gating is added in step 3.
+  // Deck is locked until onboarding is complete; index.tsx resumes the right step.
+  if (!profileStatus?.onboardingCompleted) return <Redirect href="/" />;
 
   return (
     <Tabs

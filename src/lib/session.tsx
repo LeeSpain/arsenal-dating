@@ -10,10 +10,12 @@ import {
 
 import { supabase } from '@/lib/supabase';
 
-/** What we need to route the user: do they have a profile, is onboarding done. */
+/** What we need to route the user and gate admin features. */
 type ProfileStatus = {
   exists: boolean;
   onboardingCompleted: boolean;
+  onboardingStep: string;
+  isAdmin: boolean;
 };
 
 type SessionContextValue = {
@@ -30,11 +32,18 @@ async function fetchProfileStatus(): Promise<ProfileStatus> {
   // Owner-only RLS: this only ever returns the caller's own row.
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, onboarding_completed')
+    .select('id, onboarding_completed, onboarding_step, is_admin')
     .maybeSingle();
 
-  if (error || !data) return { exists: false, onboardingCompleted: false };
-  return { exists: true, onboardingCompleted: !!data.onboarding_completed };
+  if (error || !data) {
+    return { exists: false, onboardingCompleted: false, onboardingStep: 'profile', isAdmin: false };
+  }
+  return {
+    exists: true,
+    onboardingCompleted: !!data.onboarding_completed,
+    onboardingStep: (data.onboarding_step as string) ?? 'profile',
+    isAdmin: !!data.is_admin,
+  };
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {

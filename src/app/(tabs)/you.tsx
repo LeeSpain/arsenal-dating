@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase';
 // The auth actions here — sign out and GDPR account deletion — are live.
 export default function You() {
   const router = useRouter();
-  const { signOut } = useSession();
+  const { signOut, profileStatus } = useSession();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +43,12 @@ export default function You() {
       subtitle="Your profile, settings, and safety tools."
       note="Profile editing and report/block are shells (step 3+). Sign out and account deletion below are live."
     >
+      {profileStatus?.isAdmin ? (
+        <PrimaryButton
+          label="Kit review queue"
+          onPress={() => router.push('/admin/kit-review')}
+        />
+      ) : null}
       <PrimaryButton
         label="About this project"
         variant="secondary"

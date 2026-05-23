@@ -1,14 +1,14 @@
 import { ScreenShell } from '@/components/screen-shell';
 
-// Home tab: the swipe deck. Right = like, left = pass. The deck is built from
-// preference filters (age/distance/gender), excludes already-swiped/matched/
-// blocked profiles, then the questionnaire boosts ordering only.
+// Home tab: the swipe deck. Onboarding is complete by the time you reach here.
+// The matching engine (preference-filtered candidates + questionnaire-weighted,
+// inclusive ordering) is built in step 5; for now this is the unlocked landing.
 export default function Deck() {
   return (
     <ScreenShell
-      title="Your deck"
-      subtitle="Swipe right to like, left to pass."
-      note="Shell only. The matching engine comes later: preference-filtered candidates, questionnaire-weighted ordering, and a guaranteed full deck even for brand-new fans."
+      title="You're all set"
+      subtitle="Your deck opens here."
+      note="Onboarding complete — your profile is now live and visible to other Gooners. Swiping + matching switch on in step 5 (preference-filtered, questionnaire-weighted, and inclusive: a full deck even with no questionnaire answers)."
     />
   );
 }

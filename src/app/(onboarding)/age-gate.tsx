@@ -74,7 +74,7 @@ export default function AgeGate() {
     }
     await refreshProfileStatus();
     setBusy(false);
-    router.replace('/kit-photo');
+    router.replace('/profile');
   }
 
   return (

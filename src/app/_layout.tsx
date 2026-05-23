@@ -21,6 +21,10 @@ export default function RootLayout() {
             name="legal/terms"
             options={{ headerShown: true, title: 'Terms of Use' }}
           />
+          <Stack.Screen
+            name="admin/kit-review"
+            options={{ headerShown: true, title: 'Kit review' }}
+          />
         </Stack>
         <StatusBar style="light" />
       </ThemeProvider>

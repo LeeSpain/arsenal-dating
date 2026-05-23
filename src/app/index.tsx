@@ -18,7 +18,19 @@ export default function Index() {
   }
   if (!session) return <Redirect href="/welcome" />;
   if (!profileStatus?.exists) return <Redirect href="/age-gate" />;
-  if (!profileStatus.onboardingCompleted) return <Redirect href="/kit-photo" />;
+  if (!profileStatus.onboardingCompleted) {
+    // Resume at the step they left off on.
+    switch (profileStatus.onboardingStep) {
+      case 'kit_photo':
+        return <Redirect href="/kit-photo" />;
+      case 'questionnaire':
+        return <Redirect href="/questionnaire" />;
+      case 'preferences':
+        return <Redirect href="/preferences" />;
+      default:
+        return <Redirect href="/profile" />;
+    }
+  }
   return <Redirect href="/deck" />;
 }
 

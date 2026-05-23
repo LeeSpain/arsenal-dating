@@ -13,7 +13,7 @@ export default function RootLayout() {
       <SessionProvider>
         <ThemeProvider value={DarkTheme}>
           <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="chat/[matchId]" options={{ headerShown: true, title: 'Chat' }} />
+          <Stack.Screen name="chat/[matchId]" options={{ headerShown: false }} />
           <Stack.Screen name="about" options={{ headerShown: true, title: 'About' }} />
           <Stack.Screen
             name="legal/privacy"

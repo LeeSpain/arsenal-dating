@@ -1,0 +1,14 @@
+# landing app (standalone)
+node_modules/
+.next/
+out/
+dist/
+
+# env & secrets — never commit the landing's keys
+.env*
+!.env.example
+
+# misc
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts

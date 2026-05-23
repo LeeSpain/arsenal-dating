@@ -53,6 +53,15 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!me?.id) return json({ photos: {} }, 200);
 
+  // Rate limit: 60 sign-photos calls / minute / user.
+  const { error: rlErr } = await admin.rpc('check_rate_limit', {
+    p_profile: me.id,
+    p_action: 'sign_photos',
+    p_max: 60,
+    p_window: '1 minute',
+  });
+  if (rlErr) return json({ error: 'rate_limited', message: 'Going a bit fast — try again shortly.' }, 429);
+
   // photos_for_viewer applies the visibility rule and returns only allowed paths.
   const { data: rows, error } = await admin.rpc('photos_for_viewer', {
     p_viewer: me.id,

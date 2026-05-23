@@ -149,6 +149,7 @@ Build these tables. Use UUID primary keys and Postgres Row Level Security so use
 - [ ] Replace the DRAFT Privacy Policy and Terms of Use with reviewed, GDPR-compliant text (see §11). They are placeholders only.
 - [ ] Confirm the GDPR data-handling approach for photos & location has been reviewed (see §11).
 - [ ] Re-enable proper age assurance review if/when moving beyond self-attested 18+.
+- [ ] Tune Supabase Auth sign-up rate limits (Dashboard → Authentication → Rate Limits) and add a sign-up CAPTCHA (Cloudflare Turnstile / hCaptcha) before launch. NOTE: per-user in-app rate limits (deck browse, photo signing, messages, reports) are already enforced in the database (migration `step10_rate_limits`); this item is specifically the sign-up/bot layer that was deferred.
 
 ---
 

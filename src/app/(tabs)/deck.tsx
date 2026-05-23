@@ -52,10 +52,15 @@ export default function Deck() {
         players: q?.favourite_players ?? [],
       });
     }
-    const deck = await getDeck(40, 0);
-    setPhotoMap(await signDeckPhotos(deck));
-    setCards(deck);
-    setIndex(0);
+    try {
+      const deck = await getDeck(40, 0);
+      setPhotoMap(await signDeckPhotos(deck));
+      setCards(deck);
+      setIndex(0);
+    } catch {
+      // transient (e.g. rate-limited) — show the empty state; Refresh retries
+      setCards([]);
+    }
     setLoading(false);
   }, []);
 

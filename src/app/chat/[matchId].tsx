@@ -111,8 +111,13 @@ export default function Chat() {
       const sent = await sendMessage(matchId, myId, text);
       addMessage(sent);
       setBody('');
-    } catch {
-      setError('Could not send. Please try again.');
+    } catch (e) {
+      const msg = (e as { message?: string })?.message ?? '';
+      setError(
+        msg.includes('rate_limit')
+          ? 'You’re sending a bit fast — give it a second.'
+          : 'Could not send. Please try again.',
+      );
     }
     setSending(false);
   }
@@ -147,9 +152,14 @@ export default function Chat() {
     setActionError(null);
     try {
       await reportUser(myId, other.id, reason[0], details);
-    } catch {
+    } catch (e) {
       setActionBusy(false);
-      setActionError('Could not send the report. Please try again.');
+      const msg = (e as { message?: string })?.message ?? '';
+      setActionError(
+        msg.includes('rate_limit')
+          ? 'You’ve filed several reports — please try again later.'
+          : 'Could not send the report. Please try again.',
+      );
       return;
     }
     setActionBusy(false);

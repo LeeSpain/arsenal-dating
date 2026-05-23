@@ -141,4 +141,15 @@ Build these tables. Use UUID primary keys and Postgres Row Level Security so use
 
 ---
 
+## 12. Pre-launch HARD checklist (MUST be done before any public / real-user launch)
+
+> 🚩 NOT OPTIONAL. These items are deliberately disabled or stubbed during MVP development and MUST be reversed before real users touch the app. Do not launch with any box unchecked.
+
+- [ ] **Re-enable email verification (Supabase Auth → "Confirm email" ON).** It is turned OFF during dev so email+password sign-up returns a session immediately without an email round-trip. Shipping with it off allows unverified / fake accounts — a serious abuse and safety risk on a dating app. This is the single most important pre-launch flip.
+- [ ] Replace the DRAFT Privacy Policy and Terms of Use with reviewed, GDPR-compliant text (see §11). They are placeholders only.
+- [ ] Confirm the GDPR data-handling approach for photos & location has been reviewed (see §11).
+- [ ] Re-enable proper age assurance review if/when moving beyond self-attested 18+.
+
+---
+
 *End of spec. Build only Section 4. Everything else waits.*

@@ -1,52 +1,74 @@
 -- Arsenal Dating — initial schema (MVP, BUILD_SPEC §5)
 -- UUID primary keys + Row Level Security on every table.
 --
--- NOTE (do not push blind): profile/photo/questionnaire rows are readable by any
--- authenticated user so the swipe deck can be built. That exposes personal data
--- (incl. dob, coarse location) app-wide. This intersects the open GDPR question
--- (BUILD_SPEC §11) and must be reviewed before launch — consider a public-safe
--- view or column-level restrictions then. Flagged, not decided here.
+-- PRIVACY MODEL (founder GDPR decision, "Q3"):
+--   Base tables holding personal data (profiles, photos, questionnaire) are
+--   OWNER-ONLY via RLS — a user can read/write only their own rows. Other users
+--   are seen ONLY through the `public_profiles` view, which exposes safe fields
+--   plus AGE AS A COMPUTED INTEGER and never the date of birth, email, or
+--   auth id. The deck/matching reads the view; nothing reads another user's dob.
 --
--- Feature logic intentionally deferred to its own build step:
+-- AGE (18+): enforced client-side (non-coachable UX) AND here as defense in
+--   depth — a BEFORE INSERT/UPDATE trigger rejects any profile whose dob is
+--   under 18. Under-18 sign-ups are fully erased by the app, not stored.
+--
+-- Feature logic deferred to its own build step (tables are shaped for it):
 --   * match creation on mutual like  -> matching step (trigger / RPC)
 --   * women-message-first enforcement -> messaging step (trigger / RPC)
--- Tables are shaped to support both; the rules themselves are added later.
 
 -- ---------------------------------------------------------------------------
--- Helper: map the current auth user to their profile id (bypasses RLS safely).
+-- Helpers
+-- (current_profile_id() is defined AFTER profiles exists — a `language sql`
+--  function validates its body at creation time, so it can't reference a table
+--  that doesn't exist yet.)
 -- ---------------------------------------------------------------------------
-create or replace function public.current_profile_id()
-returns uuid
-language sql
-stable
-security definer
-set search_path = public
+
+-- Reject any profile row for someone under 18 (defense in depth; the app erases
+-- under-18 sign-ups before they reach here).
+create or replace function public.enforce_adult_dob()
+returns trigger
+language plpgsql
 as $$
-  select id from public.profiles where auth_id = auth.uid()
+begin
+  if new.dob is null or new.dob > (current_date - interval '18 years') then
+    raise exception 'profile must be 18 or older';
+  end if;
+  return new;
+end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- profiles
+-- profiles  (OWNER-ONLY — others see you via public_profiles)
+-- display_name / gender are nullable: set during onboarding, after the age gate
+-- creates the row with dob. onboarding_completed gates deck visibility.
 -- ---------------------------------------------------------------------------
 create table public.profiles (
-  id            uuid primary key default gen_random_uuid(),
-  auth_id       uuid not null unique references auth.users (id) on delete cascade,
-  display_name  text not null,
-  dob           date not null,                 -- set after the 18+ age gate
-  gender        text not null
-                  check (gender in ('woman','man','non_binary','other','prefer_not_to_say')),
-  bio           text,
-  looking_for   text,
-  location      text,                          -- coarse, city-level only (GDPR)
-  kit_verified  boolean not null default false,
-  kit_photo_url text,
-  created_at    timestamptz not null default now()
+  id                  uuid primary key default gen_random_uuid(),
+  auth_id             uuid not null unique references auth.users (id) on delete cascade,
+  display_name        text,
+  dob                 date not null,                 -- private; never exposed to others
+  gender              text
+                        check (gender in ('woman','man','non_binary','other','prefer_not_to_say')),
+  bio                 text,
+  looking_for         text,
+  location            text,                          -- coarse, city-level
+  kit_verified        boolean not null default false,
+  kit_photo_url       text,
+  onboarding_completed boolean not null default false,
+  tos_accepted_at     timestamptz,                   -- consent record (GDPR)
+  policy_version      text,                          -- which policy version was accepted
+  created_at          timestamptz not null default now()
 );
+
+create trigger profiles_enforce_adult_dob
+  before insert or update of dob on public.profiles
+  for each row execute function public.enforce_adult_dob();
 
 alter table public.profiles enable row level security;
 
-create policy "profiles are readable by authenticated users"
-  on public.profiles for select to authenticated using (true);
+create policy "users read their own profile"
+  on public.profiles for select to authenticated
+  using (auth_id = auth.uid());
 
 create policy "users insert their own profile"
   on public.profiles for insert to authenticated
@@ -60,8 +82,20 @@ create policy "users delete their own profile"
   on public.profiles for delete to authenticated
   using (auth_id = auth.uid());
 
+-- Map the current auth user to their profile id (profiles now exists).
+-- SECURITY DEFINER so it bypasses RLS; used by the child-table policies below.
+create or replace function public.current_profile_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select id from public.profiles where auth_id = auth.uid()
+$$;
+
 -- ---------------------------------------------------------------------------
--- photos
+-- photos  (OWNER-ONLY — surfaced to others through public_profiles.photo_urls)
 -- ---------------------------------------------------------------------------
 create table public.photos (
   id          uuid primary key default gen_random_uuid(),
@@ -75,16 +109,14 @@ create index photos_profile_id_idx on public.photos (profile_id);
 
 alter table public.photos enable row level security;
 
-create policy "photos are readable by authenticated users"
-  on public.photos for select to authenticated using (true);
-
 create policy "users manage their own photos"
   on public.photos for all to authenticated
   using (profile_id = public.current_profile_id())
   with check (profile_id = public.current_profile_id());
 
 -- ---------------------------------------------------------------------------
--- questionnaire (one row per profile)
+-- questionnaire  (OWNER-ONLY — matching fields surfaced via public_profiles)
+-- Answers BOOST match ordering, never filter (BUILD_SPEC §6).
 -- ---------------------------------------------------------------------------
 create table public.questionnaire (
   profile_id        uuid primary key references public.profiles (id) on delete cascade,
@@ -96,24 +128,19 @@ create table public.questionnaire (
 
 alter table public.questionnaire enable row level security;
 
--- Readable by authenticated users: answers BOOST match ordering (never filter),
--- so the ranking step needs to read others' answers.
-create policy "questionnaire is readable by authenticated users"
-  on public.questionnaire for select to authenticated using (true);
-
 create policy "users manage their own questionnaire"
   on public.questionnaire for all to authenticated
   using (profile_id = public.current_profile_id())
   with check (profile_id = public.current_profile_id());
 
 -- ---------------------------------------------------------------------------
--- preferences (one row per profile) — private to the owner
+-- preferences  (OWNER-ONLY, private)
 -- ---------------------------------------------------------------------------
 create table public.preferences (
-  profile_id          uuid primary key references public.profiles (id) on delete cascade,
-  min_age             integer not null default 18 check (min_age >= 18),
-  max_age             integer not null default 99 check (max_age >= min_age),
-  max_distance_km     integer not null default 100 check (max_distance_km > 0),
+  profile_id           uuid primary key references public.profiles (id) on delete cascade,
+  min_age              integer not null default 18 check (min_age >= 18),
+  max_age              integer not null default 99 check (max_age >= min_age),
+  max_distance_km      integer not null default 100 check (max_distance_km > 0),
   interested_in_gender text[] not null default '{}'  -- multi-select
 );
 
@@ -123,6 +150,39 @@ create policy "users manage their own preferences"
   on public.preferences for all to authenticated
   using (profile_id = public.current_profile_id())
   with check (profile_id = public.current_profile_id());
+
+-- ---------------------------------------------------------------------------
+-- public_profiles  (the ONLY way to see other users)
+-- Exposes safe fields + computed AGE (integer), never dob/email/auth_id.
+-- A plain (non-security_invoker) view owned by the migration role: it reads
+-- across the owner-only base tables but only returns these safe columns.
+-- Only completed profiles appear in the deck.
+-- ---------------------------------------------------------------------------
+create view public.public_profiles as
+select
+  p.id,
+  p.display_name,
+  extract(year from age(p.dob))::int as age,
+  p.gender,
+  p.bio,
+  p.looking_for,
+  p.location,
+  p.kit_verified,
+  coalesce(
+    (select array_agg(ph.url order by ph.is_primary desc, ph.sort_order)
+       from public.photos ph
+      where ph.profile_id = p.id),
+    '{}'
+  ) as photo_urls,
+  q.favourite_players,
+  q.favourite_era,
+  q.favourite_manager,
+  q.supporting_since
+from public.profiles p
+left join public.questionnaire q on q.profile_id = p.id
+where p.onboarding_completed = true;
+
+grant select on public.public_profiles to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- swipes — one decision per (swiper, target)
@@ -149,8 +209,8 @@ create policy "users insert their own swipes"
   with check (swiper_id = public.current_profile_id());
 
 -- ---------------------------------------------------------------------------
--- matches — created on mutual like (by the matching step's trigger/RPC).
--- profile_a < profile_b is enforced so each pair is unique regardless of order.
+-- matches — created on mutual like (matching step's trigger/RPC).
+-- profile_a < profile_b keeps each pair unique regardless of order.
 -- ---------------------------------------------------------------------------
 create table public.matches (
   id         uuid primary key default gen_random_uuid(),
@@ -166,8 +226,6 @@ create index matches_profile_b_idx on public.matches (profile_b);
 
 alter table public.matches enable row level security;
 
--- Readable only by the two people in the match. No user INSERT policy on purpose:
--- matches are created server-side (SECURITY DEFINER) in the matching step.
 create policy "users read their own matches"
   on public.matches for select to authenticated
   using (
@@ -200,8 +258,8 @@ create policy "users read messages in their matches"
     )
   );
 
--- Membership + sender check here; the women-message-first rule is added as a
--- BEFORE INSERT trigger in the messaging build step.
+-- Membership + sender check; women-message-first is added as a trigger in the
+-- messaging build step.
 create policy "users send messages in their matches"
   on public.messages for insert to authenticated
   with check (
@@ -231,8 +289,6 @@ create index reports_status_idx on public.reports (status);
 
 alter table public.reports enable row level security;
 
--- A reporter can create a report and see the ones they filed. Reading the full
--- queue is an admin action handled with the service role (server side), not here.
 create policy "users create their own reports"
   on public.reports for insert to authenticated
   with check (reporter_id = public.current_profile_id());

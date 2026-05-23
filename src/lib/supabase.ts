@@ -17,13 +17,31 @@ if (!supabaseUrl || !supabaseKey) {
   );
 }
 
+// SSR/prerender-safe storage: AsyncStorage on native and in the browser (where
+// it uses localStorage); an in-memory no-op when there is no `window` (web
+// rendered in Node), so client init never reaches for window during a build.
+const memoryStore = new Map<string, string>();
+const ssrSafeStorage = {
+  getItem: async (key: string) => memoryStore.get(key) ?? null,
+  setItem: async (key: string, value: string) => {
+    memoryStore.set(key, value);
+  },
+  removeItem: async (key: string) => {
+    memoryStore.delete(key);
+  },
+};
+const isBrowser = typeof window !== 'undefined';
+const storage =
+  Platform.OS === 'web' && !isBrowser ? ssrSafeStorage : AsyncStorage;
+
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    storage: AsyncStorage,
+    storage,
     autoRefreshToken: true,
     persistSession: true,
-    // Native apps don't get the session from a URL; web OTP/magic-link would.
-    detectSessionInUrl: Platform.OS === 'web',
+    // Native apps don't get the session from a URL; web OTP/magic-link would,
+    // but only in a real browser (never during a Node build).
+    detectSessionInUrl: Platform.OS === 'web' && isBrowser,
   },
 });
 

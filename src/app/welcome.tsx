@@ -19,7 +19,7 @@ export default function Welcome() {
         start-up — built by one Arsenal fan, for the fans.
       </ThemedText>
 
-      <PrimaryButton label="Get started" onPress={() => router.push('/sign-in')} />
+      <PrimaryButton label="Get started" onPress={() => router.push('/sign-up')} />
       <PrimaryButton
         label="I already have an account"
         variant="secondary"

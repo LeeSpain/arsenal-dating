@@ -17,7 +17,11 @@
       "Bash(echo \"=== doctor exit: $? ===\")",
       "Bash(echo \"=== export exit: $? ===\")",
       "Bash(awk -F/ '{print $1}')",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(ls -la /Users/leewakeman/.claude/projects/-Users-leewakeman/memory/ 2>&1 | head -30)",
+      "Read(//Users/leewakeman/.claude/projects/-Users-leewakeman/memory/**)",
+      "Bash(node --experimental-strip-types scripts/verify-age.ts)",
+      "Bash(echo \"=== exit: $? ===\")"
     ],
     "additionalDirectories": [
       "/Users/leewakeman/Desktop/Arsenal-Dating/.claude"

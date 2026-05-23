@@ -28,7 +28,7 @@ import {
   subscribeMessages,
 } from '@/lib/messages';
 import { REPORT_REASONS, blockUser, reportUser } from '@/lib/safety';
-import { PHOTOS_BUCKET, signedUrl } from '@/lib/storage';
+import { signProfilePhotos } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
 type Other = { id: string; name: string | null; gender: string | null; photo?: string };
@@ -85,12 +85,12 @@ export default function Chat() {
         .select('id, display_name, gender, photo_urls')
         .eq('id', otherId)
         .maybeSingle();
-      const path = (op?.photo_urls as string[] | undefined)?.[0];
+      const photoMap = await signProfilePhotos([otherId]);
       setOther({
         id: otherId,
         name: op?.display_name ?? null,
         gender: op?.gender ?? null,
-        photo: path ? ((await signedUrl(PHOTOS_BUCKET, path)) ?? undefined) : undefined,
+        photo: photoMap[otherId]?.[0],
       });
       setMessages(await loadMessages(matchId));
       setLoading(false);

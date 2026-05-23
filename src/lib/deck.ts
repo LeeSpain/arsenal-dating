@@ -1,4 +1,4 @@
-import { PHOTOS_BUCKET, signedUrls } from '@/lib/storage';
+import { signProfilePhotos } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
 // One deck card = the public-safe fields from get_deck (+ computed distance).
@@ -26,10 +26,16 @@ export async function getDeck(limit = 40, offset = 0): Promise<DeckCard[]> {
   return (data ?? []) as DeckCard[];
 }
 
-/** Sign every card's photo paths in one batch; returns paths->signed map. */
+/** Sign each card's primary photo via the visibility-checked function; returns
+ *  a profileId -> primary signed URL map. */
 export async function signDeckPhotos(cards: DeckCard[]): Promise<Record<string, string>> {
-  const all = Array.from(new Set(cards.flatMap((c) => c.photo_urls ?? [])));
-  return signedUrls(PHOTOS_BUCKET, all);
+  const map = await signProfilePhotos(cards.map((c) => c.id));
+  const out: Record<string, string> = {};
+  for (const c of cards) {
+    const url = map[c.id]?.[0];
+    if (url) out[c.id] = url;
+  }
+  return out;
 }
 
 /** Record a swipe; on a like, returns whether it produced a match. */

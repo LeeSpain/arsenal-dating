@@ -77,7 +77,6 @@ export default function Deck() {
   }
 
   const current = cards[index];
-  const topPhoto = current?.photo_urls?.[0];
 
   if (loading) {
     return (
@@ -107,7 +106,7 @@ export default function Deck() {
         <SwipeCard
           key={current.id}
           card={current}
-          photoUrl={topPhoto ? photoMap[topPhoto] : undefined}
+          photoUrl={photoMap[current.id]}
           sharedTrait={sharedTrait(mine, current)}
           onDecide={decide}
         />
@@ -121,9 +120,9 @@ export default function Deck() {
         <View style={styles.overlay}>
           <ThemedView style={styles.matchBox}>
             <ThemedText style={styles.matchTitle}>It’s a match!</ThemedText>
-            {matchCard.photo_urls?.[0] && photoMap[matchCard.photo_urls[0]] ? (
+            {photoMap[matchCard.id] ? (
               <Image
-                source={{ uri: photoMap[matchCard.photo_urls[0]] }}
+                source={{ uri: photoMap[matchCard.id] }}
                 style={styles.matchPhoto}
                 contentFit="cover"
               />

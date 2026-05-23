@@ -23,7 +23,8 @@
       "Bash(node --experimental-strip-types scripts/verify-age.ts)",
       "Bash(echo \"=== exit: $? ===\")",
       "Bash(node -e \"console.log\\(require\\('expo-image-picker/package.json'\\).version\\)\")",
-      "Bash(node -e \"console.log\\(require\\('expo-image-manipulator/package.json'\\).version\\)\")"
+      "Bash(node -e \"console.log\\(require\\('expo-image-manipulator/package.json'\\).version\\)\")",
+      "Bash(awk '/^## 12\\\\./,/End of spec/' BUILD_SPEC.md)"
     ],
     "additionalDirectories": [
       "/Users/leewakeman/Desktop/Arsenal-Dating/.claude"

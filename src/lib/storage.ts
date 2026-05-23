@@ -93,3 +93,20 @@ export async function signedUrls(
 export async function deletePhotoObject(path: string): Promise<void> {
   await supabase.storage.from(PHOTOS_BUCKET).remove([path]);
 }
+
+/**
+ * Signed URLs for OTHER users' photos, via the sign-photos Edge Function (which
+ * applies the visibility check). The photos bucket is owner-only, so this is the
+ * only way to view others' photos. Returns profileId -> [signed URLs].
+ */
+export async function signProfilePhotos(
+  profileIds: string[],
+): Promise<Record<string, string[]>> {
+  const ids = Array.from(new Set(profileIds)).filter(Boolean);
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase.functions.invoke('sign-photos', {
+    body: { profileIds: ids },
+  });
+  if (error) return {};
+  return (data?.photos ?? {}) as Record<string, string[]>;
+}

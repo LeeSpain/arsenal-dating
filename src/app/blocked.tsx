@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { type BlockedProfile, listBlocked, unblock } from '@/lib/safety';
-import { PHOTOS_BUCKET, signedUrls } from '@/lib/storage';
+import { signProfilePhotos } from '@/lib/storage';
 
 export default function Blocked() {
   const [rows, setRows] = useState<(BlockedProfile & { url?: string })[]>([]);
@@ -18,9 +18,8 @@ export default function Blocked() {
   const load = useCallback(async () => {
     setLoading(true);
     const list = await listBlocked();
-    const paths = list.map((b) => b.photoPath).filter(Boolean) as string[];
-    const map = await signedUrls(PHOTOS_BUCKET, paths);
-    setRows(list.map((b) => ({ ...b, url: b.photoPath ? map[b.photoPath] : undefined })));
+    const photoMap = await signProfilePhotos(list.map((b) => b.profileId));
+    setRows(list.map((b) => ({ ...b, url: photoMap[b.profileId]?.[0] })));
     setLoading(false);
   }, []);
 

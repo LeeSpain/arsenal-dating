@@ -7,7 +7,7 @@ import { ScreenShell } from '@/components/screen-shell';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Radius, Spacing } from '@/constants/theme';
-import { PHOTOS_BUCKET, signedUrls } from '@/lib/storage';
+import { signProfilePhotos } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
 type MatchRow = { matchId: string; name: string | null; photo?: string };
@@ -33,33 +33,25 @@ export default function Matches() {
     const ms = matches ?? [];
     const otherIds = ms.map((m) => (m.profile_a === myId ? m.profile_b : m.profile_a));
 
-    const byId: Record<string, { display_name: string | null; photo_urls: string[] }> = {};
+    const nameById: Record<string, string | null> = {};
     if (otherIds.length) {
       const { data: pps } = await supabase
         .from('public_profiles')
-        .select('id, display_name, photo_urls')
+        .select('id, display_name')
         .in('id', otherIds);
       (pps ?? []).forEach((p) => {
-        byId[p.id as string] = {
-          display_name: p.display_name as string | null,
-          photo_urls: (p.photo_urls as string[]) ?? [],
-        };
+        nameById[p.id as string] = (p.display_name as string | null) ?? null;
       });
     }
-    const firstPaths = Object.values(byId)
-      .map((p) => p.photo_urls[0])
-      .filter(Boolean) as string[];
-    const urlMap = await signedUrls(PHOTOS_BUCKET, firstPaths);
+    const photoMap = await signProfilePhotos(otherIds);
 
     setRows(
       ms.map((m) => {
         const otherId = m.profile_a === myId ? m.profile_b : m.profile_a;
-        const p = byId[otherId];
-        const path = p?.photo_urls?.[0];
         return {
           matchId: m.id as string,
-          name: p?.display_name ?? null,
-          photo: path ? urlMap[path] : undefined,
+          name: nameById[otherId] ?? null,
+          photo: photoMap[otherId]?.[0],
         };
       }),
     );

@@ -18,6 +18,7 @@ if (!url || !key) {
 }
 const LONDON = { name: 'London', lat: 51.5074, lng: -0.1278 };
 const TOKYO = { name: 'Tokyo', lat: 35.6762, lng: 139.6503 };
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
 const pw = () => 'Az9!' + crypto.randomUUID();
 function ok(m: string) { console.log('  ✓ ' + m); }
 function fail(m: string): never { console.error('  ✗ ' + m); process.exit(1); }
@@ -38,7 +39,7 @@ async function makeUser(opts: {
   await c.from('profiles').insert({
     auth_id: su.user!.id, dob: '1995-01-01', display_name: opts.name,
     gender: opts.gender, location: city.name, city_lat: city.lat, city_lng: city.lng,
-    onboarding_completed: true,
+    onboarding_completed: false,
   });
   const { data: prof } = await c.from('profiles').select('id').single();
   const id = prof!.id as string;
@@ -52,6 +53,9 @@ async function makeUser(opts: {
       favourite_players: opts.players ?? [], supporting_since: opts.since ?? null,
     });
   }
+  await c.storage.from('photos').upload(`${su.user!.id}/x.png`, PNG, { contentType: 'image/png', upsert: true });
+  await c.from('photos').insert({ profile_id: id, url: `${su.user!.id}/x.png`, is_primary: true });
+  await c.from('profiles').update({ onboarding_completed: true }).eq('id', id);
   const u = { c, id, name: opts.name };
   everyone.push(u);
   return u;

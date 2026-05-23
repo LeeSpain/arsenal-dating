@@ -23,12 +23,13 @@ async function makeUser(name: string, gender: string, interested: string[] = [])
   const { data: su, error } = await c.auth.signUp({ email: `scrape-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`, password: pw() });
   if (error || !su.session) fail(`signUp ${name}: ${error?.message ?? 'no session'}`);
   const uid = su.user!.id;
-  await c.from('profiles').insert({ auth_id: uid, dob: '1995-01-01', display_name: name, gender, location: LONDON.name, city_lat: LONDON.lat, city_lng: LONDON.lng, onboarding_completed: true });
+  await c.from('profiles').insert({ auth_id: uid, dob: '1995-01-01', display_name: name, gender, location: LONDON.name, city_lat: LONDON.lat, city_lng: LONDON.lng, onboarding_completed: false });
   const { data: prof } = await c.from('profiles').select('id').single();
   const id = prof!.id as string;
   await c.from('preferences').upsert({ profile_id: id, min_age: 18, max_age: 99, max_distance_km: 20000, interested_in_gender: interested });
   await c.storage.from('photos').upload(`${uid}/x.png`, PNG, { contentType: 'image/png', upsert: true });
   await c.from('photos').insert({ profile_id: id, url: `${uid}/x.png`, is_primary: true });
+  await c.from('profiles').update({ onboarding_completed: true }).eq('id', id);
   const u = { c, id, uid, name };
   cleanup.push(u);
   return u;

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, Share, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
 import { ScreenShell } from '@/components/screen-shell';
@@ -20,10 +20,41 @@ export default function You() {
   const [error, setError] = useState<string | null>(null);
   const [purging, setPurging] = useState(false);
   const [purgeNotice, setPurgeNotice] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [dataNotice, setDataNotice] = useState<string | null>(null);
 
   async function onSignOut() {
     await signOut();
     router.replace('/welcome');
+  }
+
+  async function onExport() {
+    setError(null);
+    setExporting(true);
+    const { data, error: exportErr } = await supabase.rpc('export_my_data');
+    setExporting(false);
+    if (exportErr) {
+      setError('Could not export your data. Please try again.');
+      return;
+    }
+    const json = JSON.stringify(data, null, 2);
+    try {
+      if (Platform.OS === 'web') {
+        const w = globalThis as any;
+        const blob = new w.Blob([json], { type: 'application/json' });
+        const objectUrl = w.URL.createObjectURL(blob);
+        const a = w.document.createElement('a');
+        a.href = objectUrl;
+        a.download = 'arsenal-dating-data.json';
+        a.click();
+        w.URL.revokeObjectURL(objectUrl);
+      } else {
+        await Share.share({ message: json });
+      }
+      setDataNotice('Your data export is ready.');
+    } catch {
+      setDataNotice('Export ready (could not auto-deliver).');
+    }
   }
 
   async function onPurge() {
@@ -81,6 +112,17 @@ export default function You() {
         variant="secondary"
         onPress={() => router.push('/blocked')}
       />
+      <PrimaryButton
+        label="Request my data (GDPR)"
+        variant="secondary"
+        loading={exporting}
+        onPress={onExport}
+      />
+      {dataNotice ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {dataNotice}
+        </ThemedText>
+      ) : null}
       <PrimaryButton
         label="About this project"
         variant="secondary"

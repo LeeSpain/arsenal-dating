@@ -20,7 +20,9 @@ async function makeUser(name: string, gender: string): Promise<User> {
   const c = createClient(url, key, { auth: { persistSession: false } });
   const { data: su, error } = await c.auth.signUp({ email: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`, password: pw() });
   if (error || !su.session) fail(`signUp ${name}: ${error?.message ?? 'no session'}`);
-  await c.from('profiles').insert({ auth_id: su.user!.id, dob: '1995-01-01', display_name: name, gender, onboarding_completed: true });
+  // Messaging doesn't require a completed profile; keep it false to skip the
+  // photo requirement (#6).
+  await c.from('profiles').insert({ auth_id: su.user!.id, dob: '1995-01-01', display_name: name, gender, onboarding_completed: false });
   const { data: prof } = await c.from('profiles').select('id').single();
   const u = { c, id: prof!.id as string, name };
   everyone.push(u);

@@ -1,4 +1,5 @@
 import { CannonMark } from '@/components/cannon-mark';
+import { APP_URL } from '@/lib/site';
 
 export function Header() {
   return (
@@ -11,10 +12,10 @@ export function Header() {
         </span>
       </div>
       <a
-        href="#waitlist"
+        href={APP_URL}
         className="hidden rounded-card border border-border px-4 py-2 text-sm font-semibold text-text transition-colors hover:border-text-secondary sm:inline-block"
       >
-        Join the waitlist
+        Get started
       </a>
     </header>
   );

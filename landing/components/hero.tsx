@@ -1,4 +1,5 @@
 import { CannonMark } from '@/components/cannon-mark';
+import { APP_URL } from '@/lib/site';
 
 export function Hero() {
   return (
@@ -22,12 +23,18 @@ export function Hero() {
           A dating and community app for Arsenal supporters worldwide — to meet people who share
           the obsession. We’re building it now.
         </p>
-        <div className="mt-9">
+        <div className="mt-9 flex flex-col items-center gap-4">
           <a
-            href="#waitlist"
+            href={APP_URL}
             className="inline-block rounded-card bg-red px-7 py-3.5 font-semibold text-white shadow-lg shadow-red/20 transition-colors hover:bg-red-dark"
           >
-            Be first in when we launch
+            Get started
+          </a>
+          <a
+            href="#waitlist"
+            className="text-sm font-semibold text-text-secondary transition-colors hover:text-text"
+          >
+            or join the waitlist →
           </a>
         </div>
         <CannonMark className="mx-auto mt-16 h-12 w-12 text-text-secondary/25" />

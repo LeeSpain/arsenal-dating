@@ -21,6 +21,7 @@
     "node_modules",
     "dist",
     "scripts",
-    "supabase/functions"
+    "supabase/functions",
+    "landing"
   ]
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 
 type Status = 'idle' | 'loading' | 'done' | 'error';
@@ -73,7 +74,13 @@ export function Waitlist() {
           <p className="mt-3 text-sm text-[#E5484D]">{error}</p>
         ) : null}
         {status !== 'done' ? (
-          <p className="mt-3 text-xs text-text-secondary">No spam — just one email when we launch.</p>
+          <p className="mt-3 text-xs text-text-secondary">
+            No spam — just one email when we launch. By joining, you agree to our{' '}
+            <Link href="/privacy" className="underline transition-colors hover:text-text">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         ) : null}
       </div>
     </section>

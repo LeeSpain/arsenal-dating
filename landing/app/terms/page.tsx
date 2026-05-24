@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
+
 import { LegalDoc, type LegalSection } from '@/components/legal-doc';
 
-// Initial, good-faith Terms of Use. Pending final professional legal review.
+export const metadata: Metadata = {
+  title: 'Terms of Use · Arsenal Dating',
+  description: 'The terms for using Arsenal Dating — eligibility, behaviour, safety, your content, and our early-stage service.',
+};
+
+// Initial, good-faith Terms of Use. Kept in sync with the in-app terms.
+// Pending final professional legal review.
 const SECTIONS: LegalSection[] = [
   {
     heading: '1. About these terms',
@@ -79,7 +87,7 @@ const SECTIONS: LegalSection[] = [
   },
 ];
 
-export default function Terms() {
+export default function TermsPage() {
   return (
     <LegalDoc
       title="Terms of Use"

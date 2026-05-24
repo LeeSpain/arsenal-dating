@@ -1,8 +1,22 @@
+import type { Metadata } from 'next';
+
 import { LegalDoc, type LegalSection } from '@/components/legal-doc';
 
+export const metadata: Metadata = {
+  title: 'Privacy Policy · Arsenal Dating',
+  description: 'What personal data Arsenal Dating collects, why, where it is kept, and your rights over it.',
+};
+
 // Initial, good-faith Privacy Policy reflecting exactly what the app does.
-// Pending final professional legal review.
+// Kept in sync with the in-app policy. Pending final professional legal review.
 const SECTIONS: LegalSection[] = [
+  {
+    heading: 'This website',
+    paragraphs: [
+      'Right now, arsenaldating.com is a pre-launch waitlist page. The only personal data this website collects is the email address you choose to give us, so we can tell you when the app launches. We don’t sell it, and we’ll only email you about Arsenal Dating.',
+      'The rest of this policy describes the Arsenal Dating app itself — what it will collect and how we’ll look after it once it’s live.',
+    ],
+  },
   {
     heading: '1. Who we are',
     paragraphs: [
@@ -85,7 +99,7 @@ const SECTIONS: LegalSection[] = [
   },
 ];
 
-export default function Privacy() {
+export default function PrivacyPage() {
   return (
     <LegalDoc
       title="Privacy Policy"

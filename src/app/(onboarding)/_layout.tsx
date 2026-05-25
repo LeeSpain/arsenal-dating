@@ -1,5 +1,6 @@
 import { Redirect, Stack } from 'expo-router';
 
+import { Colors } from '@/constants/theme';
 import { useSession } from '@/lib/session';
 
 // Onboarding requires a signed-in user. Flow:
@@ -11,5 +12,12 @@ export default function OnboardingLayout() {
   if (!session) return <Redirect href="/welcome" />;
   if (profileStatus?.isSuspended) return <Redirect href="/suspended" />;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: Colors.dark.background },
+      }}
+    />
+  );
 }

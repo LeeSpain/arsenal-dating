@@ -18,7 +18,7 @@ import { PrimaryButton } from '@/components/primary-button';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
+import { Brand, FontFamily, FontSize, Functional, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   type Message,
@@ -203,6 +203,8 @@ export default function Chat() {
   return (
     <ThemedView style={styles.fill}>
       <SafeAreaView style={styles.fill} edges={['top', 'bottom']}>
+        {/* Centered column so the thread doesn't float full-bleed on wide web. */}
+        <View style={styles.column}>
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: theme.border }]}>
           <Pressable onPress={() => router.back()} hitSlop={10}>
@@ -331,6 +333,7 @@ export default function Chat() {
             </View>
           )}
         </KeyboardAvoidingView>
+        </View>
 
         {showBlock ? (
           <View style={styles.overlay}>
@@ -392,6 +395,7 @@ export default function Chat() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  column: { flex: 1, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.one },
   header: {
     flexDirection: 'row',
@@ -439,6 +443,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     paddingHorizontal: Spacing.two,
     paddingTop: Platform.OS === 'ios' ? 12 : 8,
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.body,
   },
   sendBtn: {
     minHeight: 44,

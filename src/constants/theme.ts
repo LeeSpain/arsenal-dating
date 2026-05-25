@@ -3,8 +3,10 @@
  * Base mode is DARK (DESIGN.md §"Base mode"). Light tokens are defined so the
  * flip is a one-liner later (see use-theme.ts).
  *
- * Pending design task: load Archivo (display) + Inter (body) via
- * expo-google-fonts (DESIGN.md §Typography). For now the system font is used.
+ * Fonts (DESIGN.md §Typography): Archivo for display/headlines, Inter for
+ * UI/body, loaded via expo-google-fonts in app/_layout.tsx. Each weight is its
+ * own family name (e.g. 'Inter_600SemiBold'), so set fontFamily explicitly via
+ * the FontFamily tokens below rather than relying on fontWeight.
  */
 
 import '@/global.css';
@@ -88,6 +90,24 @@ export const FontSize = {
   caption: 13,
 } as const;
 
+/**
+ * Font families (DESIGN.md §Typography), loaded in app/_layout.tsx.
+ * Archivo = display/headlines (strong, sporty); Inter = UI/body (legible).
+ * With expo-google-fonts every weight is a distinct family, so reach for these
+ * tokens (not fontWeight) to pick a weight reliably on web + native.
+ */
+export const FontFamily = {
+  // Inter — UI & body
+  body: 'Inter_400Regular',
+  bodyMedium: 'Inter_500Medium',
+  bodySemibold: 'Inter_600SemiBold',
+  bodyBold: 'Inter_700Bold',
+  // Archivo — display & headlines
+  display: 'Archivo_700Bold',
+  displaySemibold: 'Archivo_600SemiBold',
+  displayHeavy: 'Archivo_800ExtraBold',
+} as const;
+
 /** 8pt spacing system (DESIGN.md §Layout); 4 allowed for tight spacing. */
 export const Spacing = {
   half: 4,
@@ -107,4 +127,10 @@ export const Radius = {
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+
+/**
+ * Max width of the readable content column. The app is mobile-first; on wide
+ * web/desktop viewports content is capped to this and centered so it never
+ * floats unanchored. Full-bleed elements opt out deliberately.
+ */
+export const MaxContentWidth = 560;

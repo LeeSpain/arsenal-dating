@@ -1,9 +1,21 @@
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
+  /* DESIGN.md §Typography — Archivo (display) + Inter (body). The weight-specific
+     families (e.g. Inter_400Regular) are registered by expo-font at runtime. */
+  --font-display: 'Archivo_700Bold', 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-body:
+    'Inter_400Regular', 'Inter', ui-sans-serif, system-ui, sans-serif, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
+}
+
+/* Dark base (DESIGN.md) applied to the document so web never flashes white
+   before React Native Web paints, and any non-RN text defaults to Inter. */
+html,
+body {
+  margin: 0;
+  background-color: #0e0f12;
+  font-family: var(--font-body);
 }

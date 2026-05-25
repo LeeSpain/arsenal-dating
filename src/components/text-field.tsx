@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, FontSize, Functional, Radius, Spacing } from '@/constants/theme';
+import { Brand, FontFamily, FontSize, Functional, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type Props = TextInputProps & {
@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     paddingHorizontal: Spacing.two,
     fontSize: FontSize.body,
+    fontFamily: FontFamily.body,
   },
   error: {
     color: Functional.error,

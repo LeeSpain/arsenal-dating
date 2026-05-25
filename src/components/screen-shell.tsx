@@ -24,7 +24,7 @@ export function ScreenShell({ title, subtitle, note, children }: Props) {
     <ThemedView style={styles.fill}>
       <SafeAreaView style={styles.fill} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.content}>
-          <ThemedText style={styles.title}>{title}</ThemedText>
+          <ThemedText type="title">{title}</ThemedText>
           {subtitle ? (
             <ThemedText themeColor="textSecondary" style={styles.subtitle}>
               {subtitle}
@@ -53,11 +53,6 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     width: '100%',
     alignSelf: 'center',
-  },
-  title: {
-    fontSize: FontSize.title,
-    fontWeight: '700',
-    lineHeight: 30,
   },
   subtitle: {
     fontSize: FontSize.body,

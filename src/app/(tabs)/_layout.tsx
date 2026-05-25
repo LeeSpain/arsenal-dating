@@ -1,7 +1,7 @@
 import { Redirect, Tabs } from 'expo-router';
 import { View, type ColorValue } from 'react-native';
 
-import { Brand } from '@/constants/theme';
+import { Brand, Colors, FontFamily } from '@/constants/theme';
 import { useSession } from '@/lib/session';
 
 // Simple dot icon so the tab bar needs no icon-font dependency yet.
@@ -23,8 +23,19 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Brand.red,
         headerShown: true,
+        tabBarActiveTintColor: Brand.red,
+        tabBarInactiveTintColor: Colors.dark.textSecondary,
+        headerStyle: { backgroundColor: Colors.dark.background },
+        headerTitleStyle: { fontFamily: FontFamily.display },
+        headerTintColor: Colors.dark.text,
+        headerShadowVisible: false,
+        tabBarStyle: {
+          backgroundColor: Colors.dark.background,
+          borderTopColor: Colors.dark.border,
+        },
+        tabBarLabelStyle: { fontFamily: FontFamily.bodyMedium },
+        sceneStyle: { backgroundColor: Colors.dark.background },
       }}
     >
       <Tabs.Screen

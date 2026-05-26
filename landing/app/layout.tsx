@@ -13,19 +13,50 @@ const archivo = Archivo({
   display: 'swap',
 });
 
+const SITE_URL = 'https://arsenaldating.com';
+const TITLE = 'Arsenal Dating — Built by a Gooner, for Gooners';
+const DESCRIPTION =
+  'A dating and community app for Arsenal supporters worldwide. An independent fan project — not affiliated with Arsenal Football Club. Coming soon — join the waitlist.';
+
 export const metadata: Metadata = {
-  title: 'Arsenal Dating — Built by a Gooner, for Gooners',
-  description:
-    'A dating and community app for Arsenal supporters worldwide. Coming soon — join the waitlist.',
-  metadataBase: new URL('https://arsenaldating.com'),
+  title: TITLE,
+  description: DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
+  applicationName: 'Arsenal Dating',
+  authors: [{ name: 'Arsenal Dating' }],
+  keywords: ['Arsenal', 'Gooners', 'dating', 'football', 'community', 'fan project'],
+  icons: {
+    icon: [
+      { url: '/favicon-32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16.png', type: 'image/png', sizes: '16x16' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+    ],
+    apple: { url: '/apple-touch-icon.png', sizes: '180x180' },
+  },
   openGraph: {
-    title: 'Arsenal Dating — Built by a Gooner, for Gooners',
-    description: 'Meet fellow Arsenal obsessives. Coming soon — be first in when we launch.',
-    url: 'https://arsenaldating.com',
-    siteName: 'Arsenal Dating',
     type: 'website',
+    url: SITE_URL,
+    siteName: 'Arsenal Dating',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Arsenal Dating — Built by a Gooner, for Gooners',
+      },
+    ],
+    locale: 'en_GB',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/og-image.jpg'],
   },
   robots: { index: true, follow: true },
+  alternates: { canonical: SITE_URL },
 };
 
 export const viewport: Viewport = {

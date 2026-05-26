@@ -4,6 +4,20 @@ import { APP_URL } from '@/lib/site';
 export function Hero() {
   return (
     <section className="relative overflow-hidden">
+      {/* Stadium photo behind the headline. The image is faded then layered with
+          a strong vertical dark gradient — text legibility wins over visuals. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/hero-stadium.jpg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 -z-20 h-full w-full object-cover opacity-55"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-bg/80 via-bg/55 to-bg"
+      />
+
       {/* Matchday glow — navy depth + a faint gold. No red at scale (DESIGN.md). */}
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
         <div className="absolute left-1/2 top-[-12%] h-[440px] w-[760px] -translate-x-1/2 rounded-full bg-navy/30 blur-[130px]" />

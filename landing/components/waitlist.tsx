@@ -40,7 +40,16 @@ export function Waitlist() {
 
   return (
     <section id="waitlist" className="mx-auto max-w-content px-6 py-16">
-      <div className="mx-auto max-w-xl rounded-card border border-border bg-surface p-8 text-center sm:p-10">
+      <div className="mx-auto max-w-xl overflow-hidden rounded-card border border-border bg-surface text-center">
+        {/* Celebration banner — confetti rain across the stand. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/confetti.jpg"
+          alt=""
+          aria-hidden="true"
+          className="h-32 w-full object-cover sm:h-40"
+        />
+        <div className="p-8 sm:p-10">
         <h2 className="font-display text-2xl font-bold sm:text-3xl">Be first in when we launch</h2>
         <p className="mt-3 text-text-secondary">
           Create your profile in the app and start meeting fellow Gooners.
@@ -98,6 +107,7 @@ export function Waitlist() {
               .
             </p>
           ) : null}
+        </div>
         </div>
       </div>
     </section>

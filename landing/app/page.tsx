@@ -1,3 +1,4 @@
+import { FansBand } from '@/components/fans-band';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { Hero } from '@/components/hero';
@@ -12,6 +13,7 @@ export default function Home() {
       <Hero />
       <ValueProps />
       <Why />
+      <FansBand />
       <Waitlist />
       <Footer />
     </main>

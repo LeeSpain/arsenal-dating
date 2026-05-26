@@ -1,3 +1,4 @@
+import { Contact } from '@/components/contact';
 import { FansBand } from '@/components/fans-band';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
@@ -17,6 +18,7 @@ export default function Home() {
       <Why />
       <FansBand />
       <Waitlist />
+      <Contact />
       <Footer />
     </main>
   );

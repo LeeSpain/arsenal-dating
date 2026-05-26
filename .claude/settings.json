@@ -40,7 +40,18 @@
       "Bash(node scripts/generate-pwa-icons.mjs)",
       "Bash(node -e \"const h=require\\('./node_modules/expo-router/html'\\); console.log\\('exports:', Object.keys\\(h\\)\\)\")",
       "Bash(cd /Users/leewakeman/Desktop/Arsenal-Dating; echo \"=== log ===\"; cat /tmp/arsenal-web.log; echo \"=== procs ===\"; pgrep -fl \"serve\" || echo \"\\(no serve process\\)\")",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(node -e \"require\\('sharp'\\);console.log\\('root sharp: yes', require\\('sharp/package.json'\\).version\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node landing/scripts/optimize-images.mjs)",
+      "Bash(git reset *)",
+      "Bash(git ls-tree *)",
+      "Bash(node /Users/leewakeman/Desktop/Arsenal-Dating/landing/scripts/optimize-images.mjs)",
+      "Bash(cd /Users/leewakeman/Desktop/Arsenal-Dating/landing/public/images; ls -la sam.png maya.png Joel.png 2>&1; echo \"--- trash check ---\"; ls ~/.Trash/ | grep -iE \"sam|joel|maya\" | head)",
+      "Read(//Users/leewakeman/.Trash//**)",
+      "Bash(cd /Users/leewakeman/Desktop/Arsenal-Dating; echo \"=== landing folder tree ===\"; find landing -name \"*.png\" -o -name \"*.jpg\" -o -name \"*.jpeg\" 2>/dev/null | head -20; echo \"=== Downloads dir ===\"; ls -t ~/Downloads/ 2>/dev/null | head -10; echo \"=== Desktop dir ===\"; ls -t ~/Desktop/ 2>/dev/null | head -10)",
+      "Read(//Users/leewakeman/Downloads//**)",
+      "Bash(git fetch *)"
     ],
     "additionalDirectories": [
       "/Users/leewakeman/Desktop/Arsenal-Dating/.claude"

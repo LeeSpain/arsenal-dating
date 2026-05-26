@@ -77,6 +77,10 @@ export default function RootLayout() {
             name="admin/reports"
             options={{ headerShown: true, title: 'Reports' }}
           />
+          <Stack.Screen
+            name="admin/messages"
+            options={{ headerShown: true, title: 'Messages' }}
+          />
           <Stack.Screen name="blocked" options={{ headerShown: true, title: 'Blocked' }} />
           <Stack.Screen name="suspended" options={{ headerShown: false }} />
           <Stack.Screen

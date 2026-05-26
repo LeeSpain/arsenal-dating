@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Share, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
@@ -22,6 +22,24 @@ export default function You() {
   const [purgeNotice, setPurgeNotice] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [dataNotice, setDataNotice] = useState<string | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState<number | null>(null);
+
+  // Live unread-messages count for the admin button label. RLS makes this a
+  // no-op (zero rows) for non-admins, so the call is safe to make for everyone.
+  useEffect(() => {
+    if (!profileStatus?.isAdmin) return;
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from('founder_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_read', false);
+      if (!cancelled) setUnreadMessages(count ?? 0);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileStatus?.isAdmin]);
 
   async function onSignOut() {
     await signOut();
@@ -94,6 +112,14 @@ export default function You() {
         <>
           <PrimaryButton label="Kit review queue" onPress={() => router.push('/admin/kit-review')} />
           <PrimaryButton label="Reports queue" onPress={() => router.push('/admin/reports')} />
+          <PrimaryButton
+            label={
+              unreadMessages && unreadMessages > 0
+                ? `Founder messages · ${unreadMessages} new`
+                : 'Founder messages'
+            }
+            onPress={() => router.push('/admin/messages')}
+          />
           <PrimaryButton
             label="Purge orphaned images"
             variant="secondary"

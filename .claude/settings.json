@@ -30,7 +30,17 @@
       "Bash(npm run *)",
       "Bash(git push *)",
       "Bash(echo \"APP TSC EXIT: $?\")",
-      "Bash(echo \"LANDING BUILD EXIT: $?\")"
+      "Bash(echo \"LANDING BUILD EXIT: $?\")",
+      "Bash(echo \"PUSH EXIT: $?\")",
+      "Bash(echo \"EXPORT EXIT: $?\")",
+      "Bash(echo \"BUILD EXIT: $?\")",
+      "Bash(grep -rln 'type=\"__TRACKED_VAR__\"' src/)",
+      "Bash(echo \"TSC EXIT: $?\")",
+      "Bash(node -e \"const p=require\\('./node_modules/@expo-google-fonts/inter/package.json'\\); console.log\\(JSON.stringify\\(p.exports||'\\(none\\)',null,1\\)\\); console.log\\('main:',p.main\\)\")",
+      "Bash(node scripts/generate-pwa-icons.mjs)",
+      "Bash(node -e \"const h=require\\('./node_modules/expo-router/html'\\); console.log\\('exports:', Object.keys\\(h\\)\\)\")",
+      "Bash(cd /Users/leewakeman/Desktop/Arsenal-Dating; echo \"=== log ===\"; cat /tmp/arsenal-web.log; echo \"=== procs ===\"; pgrep -fl \"serve\" || echo \"\\(no serve process\\)\")",
+      "Read(//private/tmp/**)"
     ],
     "additionalDirectories": [
       "/Users/leewakeman/Desktop/Arsenal-Dating/.claude"

@@ -58,6 +58,11 @@ export default function SignIn() {
       />
       {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
       <PrimaryButton label="Sign in" loading={loading} onPress={onSubmit} />
+      <Link href="/forgot-password" style={styles.alt}>
+        <ThemedText type="small" themeColor="accent">
+          Forgot password?
+        </ThemedText>
+      </Link>
       <Link href="/sign-up" style={styles.alt}>
         <ThemedText type="small" themeColor="accent">
           Create an account

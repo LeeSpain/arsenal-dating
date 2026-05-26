@@ -79,6 +79,18 @@ export default function RootLayout() {
           />
           <Stack.Screen name="blocked" options={{ headerShown: true, title: 'Blocked' }} />
           <Stack.Screen name="suspended" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="forgot-password"
+            options={{ headerShown: true, title: 'Forgot password' }}
+          />
+          <Stack.Screen
+            name="reset-password"
+            options={{ headerShown: true, title: 'Reset password' }}
+          />
+          <Stack.Screen
+            name="change-password"
+            options={{ headerShown: true, title: 'Change password' }}
+          />
           </Stack>
           <StatusBar style="light" />
         </ThemeProvider>

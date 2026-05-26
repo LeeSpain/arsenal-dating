@@ -128,6 +128,11 @@ export default function You() {
         variant="secondary"
         onPress={() => router.push('/about')}
       />
+      <PrimaryButton
+        label="Change password"
+        variant="secondary"
+        onPress={() => router.push('/change-password')}
+      />
       <PrimaryButton label="Sign out" variant="secondary" onPress={onSignOut} />
 
       {!confirming ? (

@@ -54,3 +54,8 @@ supabase/.env
 
 # IDE
 .idea/
+
+# Landing image sources — the multi-MB Gemini PNGs are run through
+# landing/scripts/optimize-images.mjs to produce the JPGs we ship. The PNGs
+# themselves never need to reach git or the deployed site.
+landing/public/images/*.png

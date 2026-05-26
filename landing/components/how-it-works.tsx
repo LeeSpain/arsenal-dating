@@ -1,12 +1,12 @@
 import { CannonMark } from '@/components/cannon-mark';
 
 // Three illustrative deck cards. Layout mirrors the in-app SwipeCard: full-bleed
-// "photo" area with a name/details overlay along the bottom. DESIGN.md compliant:
+// photo area with a name/details overlay along the bottom. DESIGN.md compliant:
 // dark base, red as accent only (the LIKE stamp), gold reserved for the shared-
 // Arsenal-trait line — the actual product differentiator.
 //
-// HARD: no real faces, no real photos, no Arsenal kit/crest. The placeholder is
-// our own cannon mark at very low opacity over a dark red-tinted gradient.
+// The disclaimer in the section heading makes it explicit these are illustrative
+// examples, not real members.
 
 type Example = {
   name: string;
@@ -16,6 +16,9 @@ type Example = {
   shared: string;
   bio: string;
   hint?: 'like' | 'pass';
+  /** Photo path under /public/images. When absent, the card falls back to the
+      cannon-on-dark-gradient placeholder. */
+  photo?: string;
 };
 
 const EXAMPLES: Example[] = [
@@ -27,6 +30,7 @@ const EXAMPLES: Example[] = [
     shared: 'You both love the Invincibles',
     bio: 'Highbury history nerd. Still hasn’t recovered from Paris 2006.',
     hint: 'like',
+    photo: '/images/card-sam.jpg',
   },
   {
     name: 'Joel',
@@ -35,6 +39,7 @@ const EXAMPLES: Example[] = [
     favourite: 'Bukayo Saka',
     shared: 'You both pick Saka as your #1',
     bio: 'Five-a-side Tuesdays. Always playing left back.',
+    photo: '/images/card-joel.jpg',
   },
   {
     name: 'Maya',
@@ -43,6 +48,7 @@ const EXAMPLES: Example[] = [
     favourite: 'Ian Wright',
     shared: 'You both love Ian Wright',
     bio: 'Loud at the Emirates, quiet everywhere else.',
+    photo: '/images/card-maya.jpg',
   },
 ];
 
@@ -74,13 +80,29 @@ export function HowItWorks() {
   );
 }
 
-function DeckCard({ name, age, city, favourite, shared, bio, hint }: Example) {
+function DeckCard({ name, age, city, favourite, shared, bio, hint, photo }: Example) {
   return (
     <div className="relative aspect-[3/4] overflow-hidden rounded-card border border-border bg-black">
-      {/* Placeholder photo area: dark gradient with a deep-red hint, plus a
-          barely-there cannon mark — premium and on-brand without faking faces. */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-bg via-[#180b0e] to-[#2a1216]" />
-      <CannonMark className="absolute -right-6 top-6 h-44 w-44 text-red/[0.08]" />
+      {photo ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={photo}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          {/* Light fade behind the info overlay only — keeps the photo above
+              fully clear so the face never has to fight a gradient. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
+        </>
+      ) : (
+        <>
+          {/* Fallback placeholder: dark gradient with a deep-red hint and our
+              own cannon mark at very low opacity — premium and on-brand. */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-bg via-[#180b0e] to-[#2a1216]" />
+          <CannonMark className="absolute -right-6 top-6 h-44 w-44 text-red/[0.08]" />
+        </>
+      )}
 
       {/* Swipe hint, shown on one card so the mechanic is obvious. */}
       {hint === 'like' ? (

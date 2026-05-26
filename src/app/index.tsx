@@ -7,7 +7,7 @@ import { useSession } from '@/lib/session';
 
 // Entry router: send the user to the right place based on session + onboarding.
 export default function Index() {
-  const { session, profileStatus, loading } = useSession();
+  const { session, profileStatus, loading, isPasswordRecovery } = useSession();
 
   if (loading) {
     return (
@@ -16,6 +16,9 @@ export default function Index() {
       </ThemedView>
     );
   }
+  // Recovery wins over every other routing decision — even if the user has
+  // a fully-onboarded session, mid-recovery means "go set a new password".
+  if (isPasswordRecovery) return <Redirect href="/reset-password" />;
   if (!session) return <Redirect href="/welcome" />;
   if (profileStatus?.isSuspended) return <Redirect href="/suspended" />;
   if (!profileStatus?.exists) return <Redirect href="/age-gate" />;

@@ -1,5 +1,5 @@
 import { Link, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
@@ -7,56 +7,46 @@ import { ScreenShell } from '@/components/screen-shell';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Functional, Spacing } from '@/constants/theme';
+import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
 type Phase = 'checking' | 'ready' | 'invalid' | 'done';
 
 /**
- * Landing page for the password-reset email link. Supabase parses the recovery
- * token from the URL hash (detectSessionInUrl) and fires a PASSWORD_RECOVERY
- * auth event; once we see either a session or that event, we let the user set
- * a new password. Strength/leaked-password rules are enforced server-side by
- * Supabase and surfaced here.
+ * Landing page for the password-reset email link. SessionProvider is the
+ * single source of truth for "is this a real recovery flow?" — it owns the
+ * PASSWORD_RECOVERY auth event and exposes `isPasswordRecovery` here. Gating
+ * on that flag (rather than "any session exists") is the security tightening:
+ * a signed-in user manually navigating to /reset-password is treated as an
+ * invalid link, not handed a no-current-password rotate.
+ *
+ * Strength / leaked-password rules are enforced server-side by Supabase on
+ * updateUser and the error is surfaced verbatim.
  */
 export default function ResetPassword() {
   const router = useRouter();
+  const { isPasswordRecovery, clearPasswordRecovery } = useSession();
   const [phase, setPhase] = useState<Phase>('checking');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const readyRef = useRef(false);
-
   useEffect(() => {
-    let cancelled = false;
-    const markReady = () => {
-      readyRef.current = true;
-      if (!cancelled) setPhase('ready');
-    };
-
-    // Case 1: Supabase parsed the recovery hash before we mounted — session
-    // already present.
-    supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) markReady();
-    });
-
-    // Case 2: parse happens after mount — listen for the event.
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) markReady();
-    });
-
-    // Case 3: link is invalid/expired — no session, no event after a brief grace.
+    // Recovery confirmed by SessionProvider — show the form.
+    if (isPasswordRecovery) {
+      setPhase((prev) => (prev === 'checking' ? 'ready' : prev));
+      return;
+    }
+    // No recovery in progress: give Supabase a brief grace to emit the event
+    // (in case it hasn't propagated yet), then mark the link invalid. Once
+    // phase has left 'checking' we never roll it back, so a late event can't
+    // surprise the user with the form after they've been shown "expired".
     const timer = setTimeout(() => {
-      if (!cancelled && !readyRef.current) setPhase('invalid');
+      setPhase((prev) => (prev === 'checking' ? 'invalid' : prev));
     }, 3000);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-      sub.subscription.unsubscribe();
-    };
-  }, []);
+    return () => clearTimeout(timer);
+  }, [isPasswordRecovery]);
 
   async function onSubmit() {
     setError(null);
@@ -76,6 +66,9 @@ export default function ResetPassword() {
       setError(updateErr.message);
       return;
     }
+    // Recovery's done — clear the flag so the entry router resumes normal
+    // routing on the next navigation.
+    clearPasswordRecovery();
     setPhase('done');
   }
 

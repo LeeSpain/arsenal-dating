@@ -16,6 +16,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { DesktopShell } from '@/components/desktop-shell';
 import { Colors, FontFamily } from '@/constants/theme';
 import { SessionProvider } from '@/lib/session';
 
@@ -47,6 +48,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SessionProvider>
         <ThemeProvider value={DarkTheme}>
+          <DesktopShell>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -96,6 +98,7 @@ export default function RootLayout() {
             options={{ headerShown: true, title: 'Change password' }}
           />
           </Stack>
+          </DesktopShell>
           <StatusBar style="light" />
         </ThemeProvider>
       </SessionProvider>

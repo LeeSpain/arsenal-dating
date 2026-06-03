@@ -72,6 +72,10 @@ export default function RootLayout() {
             options={{ headerShown: true, title: 'Terms of Use' }}
           />
           <Stack.Screen
+            name="admin/index"
+            options={{ headerShown: true, title: 'Admin' }}
+          />
+          <Stack.Screen
             name="admin/kit-review"
             options={{ headerShown: true, title: 'Kit review' }}
           />

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform, Share, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
@@ -18,28 +18,8 @@ export default function You() {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [purging, setPurging] = useState(false);
-  const [purgeNotice, setPurgeNotice] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [dataNotice, setDataNotice] = useState<string | null>(null);
-  const [unreadMessages, setUnreadMessages] = useState<number | null>(null);
-
-  // Live unread-messages count for the admin button label. RLS makes this a
-  // no-op (zero rows) for non-admins, so the call is safe to make for everyone.
-  useEffect(() => {
-    if (!profileStatus?.isAdmin) return;
-    let cancelled = false;
-    (async () => {
-      const { count } = await supabase
-        .from('founder_messages')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_read', false);
-      if (!cancelled) setUnreadMessages(count ?? 0);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [profileStatus?.isAdmin]);
 
   async function onSignOut() {
     await signOut();
@@ -75,20 +55,6 @@ export default function You() {
     }
   }
 
-  async function onPurge() {
-    setPurging(true);
-    setError(null);
-    const { data, error: purgeErr } = await supabase.functions.invoke('purge-orphans', {
-      method: 'POST',
-    });
-    setPurging(false);
-    if (purgeErr) {
-      setError('Purge failed.');
-      return;
-    }
-    setPurgeNotice(`Purged ${data?.purged ?? 0} orphaned image(s).`);
-  }
-
   async function onDelete() {
     setError(null);
     setBusy(true);
@@ -109,29 +75,7 @@ export default function You() {
       note="Profile editing and report/block are shells (step 3+). Sign out and account deletion below are live."
     >
       {profileStatus?.isAdmin ? (
-        <>
-          <PrimaryButton label="Kit review queue" onPress={() => router.push('/admin/kit-review')} />
-          <PrimaryButton label="Reports queue" onPress={() => router.push('/admin/reports')} />
-          <PrimaryButton
-            label={
-              unreadMessages && unreadMessages > 0
-                ? `Founder messages · ${unreadMessages} new`
-                : 'Founder messages'
-            }
-            onPress={() => router.push('/admin/messages')}
-          />
-          <PrimaryButton
-            label="Purge orphaned images"
-            variant="secondary"
-            loading={purging}
-            onPress={onPurge}
-          />
-          {purgeNotice ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {purgeNotice}
-            </ThemedText>
-          ) : null}
-        </>
+        <PrimaryButton label="Admin" onPress={() => router.push('/admin')} />
       ) : null}
       <PrimaryButton
         label="Blocked users"

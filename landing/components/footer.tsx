@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { CannonMark } from '@/components/cannon-mark';
+import { APP_URL } from '@/lib/site';
 
 export function Footer() {
   return (
@@ -22,6 +23,12 @@ export function Footer() {
           <Link href="/terms" className="text-text-secondary transition-colors hover:text-text">
             Terms of Use
           </Link>
+          <a
+            href={`${APP_URL}/sign-in`}
+            className="text-text-secondary transition-colors hover:text-text"
+          >
+            Admin
+          </a>
         </nav>
         <p className="mt-4 text-xs text-text-secondary">
           © {new Date().getFullYear()} Arsenal Dating · Built by a Gooner, for Gooners.

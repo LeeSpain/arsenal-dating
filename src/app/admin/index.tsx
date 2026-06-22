@@ -6,7 +6,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AdminNav, type AdminSection, WIDE_BREAKPOINT } from '@/components/admin/AdminNav';
 import {
   AdminThemeProvider,
-  ThemeSwitcher,
   useAdminTheme,
 } from '@/components/admin/AdminThemeContext';
 import { KitReviewSection } from '@/components/admin/KitReviewSection';
@@ -14,6 +13,7 @@ import { MaintenanceSection } from '@/components/admin/MaintenanceSection';
 import { MessagesSection } from '@/components/admin/MessagesSection';
 import { OverviewSection } from '@/components/admin/OverviewSection';
 import { ReportsSection } from '@/components/admin/ReportsSection';
+import { SettingsSection } from '@/components/admin/SettingsSection';
 import { WaitlistSection } from '@/components/admin/WaitlistSection';
 import { PrimaryButton } from '@/components/primary-button';
 import { ScreenShell } from '@/components/screen-shell';
@@ -104,6 +104,8 @@ function AdminControlCentreInner() {
         return <ReportsSection />;
       case 'maintenance':
         return <MaintenanceSection />;
+      case 'settings':
+        return <SettingsSection />;
     }
   })();
 
@@ -112,19 +114,12 @@ function AdminControlCentreInner() {
       <SafeAreaView style={styles.fill} edges={['top', 'bottom']}>
         <View style={[styles.layout, isDesktop ? styles.layoutDesktop : styles.layoutMobile]}>
           <AdminNav current={section} onSelect={setSection} badges={badges} />
-          <View style={styles.contentColumn}>
-            {/* Top-right theme switcher. On desktop it sits above the content;
-                on mobile it's still right-aligned, just below the tab strip. */}
-            <View style={styles.switcherRow}>
-              <ThemeSwitcher />
-            </View>
-            <ScrollView
-              style={styles.content}
-              contentContainerStyle={styles.contentInner}
-            >
-              {SectionView}
-            </ScrollView>
-          </View>
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentInner}
+          >
+            {SectionView}
+          </ScrollView>
         </View>
       </SafeAreaView>
     </View>
@@ -144,13 +139,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   layoutMobile: { flexDirection: 'column' },
-  contentColumn: { flex: 1, minWidth: 0 },
-  switcherRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.two,
-  },
   content: { flex: 1 },
   contentInner: {
     padding: Spacing.three,

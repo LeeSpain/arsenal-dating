@@ -10,7 +10,8 @@ export type AdminSection =
   | 'waitlist'
   | 'kit'
   | 'reports'
-  | 'maintenance';
+  | 'maintenance'
+  | 'settings';
 
 const ITEMS: { key: AdminSection; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -19,6 +20,7 @@ const ITEMS: { key: AdminSection; label: string }[] = [
   { key: 'kit', label: 'Kit review' },
   { key: 'reports', label: 'Reports' },
   { key: 'maintenance', label: 'Maintenance' },
+  { key: 'settings', label: 'Settings' },
 ];
 
 // Sidebar on desktop (>=1024px), horizontal tabs below. State is owned by the

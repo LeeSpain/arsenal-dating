@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { notify } from '@/lib/notify';
+
 // Server-side only. Reads the LANDING Supabase project's env (never the app's).
 // Inserts via the anon key + an insert-only RLS policy, so the list can't be read
 // back through the API.
@@ -33,5 +35,6 @@ export async function POST(req: Request) {
     if (error.code === '23505') return Response.json({ ok: true, already: true });
     return Response.json({ error: 'failed' }, { status: 500 });
   }
+  await notify('New waitlist signup', `${email} just joined the waitlist.`);
   return Response.json({ ok: true });
 }

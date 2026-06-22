@@ -4,6 +4,11 @@ import { ActivityIndicator, ScrollView, StyleSheet, useWindowDimensions, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AdminNav, type AdminSection, WIDE_BREAKPOINT } from '@/components/admin/AdminNav';
+import {
+  AdminThemeProvider,
+  ThemeSwitcher,
+  useAdminTheme,
+} from '@/components/admin/AdminThemeContext';
 import { KitReviewSection } from '@/components/admin/KitReviewSection';
 import { MaintenanceSection } from '@/components/admin/MaintenanceSection';
 import { MessagesSection } from '@/components/admin/MessagesSection';
@@ -13,8 +18,7 @@ import { WaitlistSection } from '@/components/admin/WaitlistSection';
 import { PrimaryButton } from '@/components/primary-button';
 import { ScreenShell } from '@/components/screen-shell';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Brand, Colors, Spacing } from '@/constants/theme';
+import { Brand, Spacing } from '@/constants/theme';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
@@ -22,15 +26,27 @@ import { supabase } from '@/lib/supabase';
 // nav at >=1024px, horizontal tab strip below. DesktopShell opts out of its
 // phone frame on this route so the layout gets the full viewport width.
 //
+// Theming is admin-scoped — see AdminThemeContext. The rest of the app is
+// unaffected.
+//
 // Authorization model unchanged: every action this page exposes (kit-review,
 // report-review, purge-orphans, founder_messages SELECT/UPDATE, waitlist
 // SELECT, admin-stats) is enforced server-side via is_admin. The cosmetic
 // gate below just hides the UI from non-admins.
 export default function AdminControlCentre() {
+  return (
+    <AdminThemeProvider>
+      <AdminControlCentreInner />
+    </AdminThemeProvider>
+  );
+}
+
+function AdminControlCentreInner() {
   const router = useRouter();
   const { profileStatus, loading } = useSession();
   const { width } = useWindowDimensions();
   const isDesktop = width >= WIDE_BREAKPOINT;
+  const { tokens } = useAdminTheme();
 
   const [section, setSection] = useState<AdminSection>('overview');
   const [badges, setBadges] = useState<Partial<Record<AdminSection, number>>>({});
@@ -42,20 +58,12 @@ export default function AdminControlCentre() {
     if (!profileStatus?.isAdmin) return;
     let cancelled = false;
     (async () => {
-      const [m, _w, _k, _r] = await Promise.all([
-        supabase
-          .from('founder_messages')
-          .select('id', { count: 'exact', head: true })
-          .eq('is_read', false),
-        // Other counts come from admin-stats so we don't duplicate work — keep
-        // the nav-badge pings tiny (just unread messages for now). The Overview
-        // section fetches the full set.
-        Promise.resolve({ count: 0 }),
-        Promise.resolve({ count: 0 }),
-        Promise.resolve({ count: 0 }),
-      ]);
+      const { count } = await supabase
+        .from('founder_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_read', false);
       if (cancelled) return;
-      setBadges({ messages: m.count ?? 0 });
+      setBadges({ messages: count ?? 0 });
     })();
     return () => {
       cancelled = true;
@@ -71,10 +79,14 @@ export default function AdminControlCentre() {
   }
   if (!profileStatus?.isAdmin) {
     return (
-      <ScreenShell title="Admin Control Centre">
-        <ThemedText themeColor="textSecondary">You don’t have access to this.</ThemedText>
-        <PrimaryButton label="Back" variant="secondary" onPress={() => router.replace('/')} />
-      </ScreenShell>
+      <View style={[styles.gateRoot, { backgroundColor: tokens.bg }]}>
+        <ScreenShell title="Admin Control Centre">
+          <ThemedText style={{ color: tokens.textSecondary }}>
+            You don’t have access to this.
+          </ThemedText>
+          <PrimaryButton label="Back" variant="secondary" onPress={() => router.replace('/')} />
+        </ScreenShell>
+      </View>
     );
   }
 
@@ -96,24 +108,32 @@ export default function AdminControlCentre() {
   })();
 
   return (
-    <ThemedView style={styles.fill}>
+    <View style={[styles.fill, { backgroundColor: tokens.bg }]}>
       <SafeAreaView style={styles.fill} edges={['top', 'bottom']}>
         <View style={[styles.layout, isDesktop ? styles.layoutDesktop : styles.layoutMobile]}>
           <AdminNav current={section} onSelect={setSection} badges={badges} />
-          <ScrollView
-            style={styles.content}
-            contentContainerStyle={styles.contentInner}
-          >
-            {SectionView}
-          </ScrollView>
+          <View style={styles.contentColumn}>
+            {/* Top-right theme switcher. On desktop it sits above the content;
+                on mobile it's still right-aligned, just below the tab strip. */}
+            <View style={styles.switcherRow}>
+              <ThemeSwitcher />
+            </View>
+            <ScrollView
+              style={styles.content}
+              contentContainerStyle={styles.contentInner}
+            >
+              {SectionView}
+            </ScrollView>
+          </View>
         </View>
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: Colors.dark.background },
+  fill: { flex: 1 },
+  gateRoot: { flex: 1 },
   layout: { flex: 1 },
   layoutDesktop: {
     flexDirection: 'row',
@@ -124,6 +144,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   layoutMobile: { flexDirection: 'column' },
+  contentColumn: { flex: 1, minWidth: 0 },
+  switcherRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.two,
+  },
   content: { flex: 1 },
   contentInner: {
     padding: Spacing.three,

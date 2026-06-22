@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useAdminTheme } from '@/components/admin/AdminThemeContext';
 import { PrimaryButton } from '@/components/primary-button';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Functional, Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
 // Maintenance section. Only action in v1 is the existing purge-orphans
-// function (clears storage objects whose owning DB rows are gone). Lifted
-// unchanged from the You-tab admin block. Future maintenance actions slot
+// function. Surfaces themed per AdminTheme; future maintenance actions slot
 // in here as sibling cards.
 export function MaintenanceSection() {
+  const { tokens } = useAdminTheme();
   const [purging, setPurging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,15 +34,26 @@ export function MaintenanceSection() {
   return (
     <View style={styles.root}>
       <View style={styles.head}>
-        <ThemedText style={styles.title}>Maintenance</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText style={[styles.title, { color: tokens.text }]}>Maintenance</ThemedText>
+        <ThemedText type="small" style={{ color: tokens.textSecondary }}>
           One-off admin actions. All server-enforced.
         </ThemedText>
       </View>
 
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedText style={styles.cardTitle}>Purge orphaned images</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: tokens.surface,
+            borderColor: tokens.border,
+            borderWidth: StyleSheet.hairlineWidth,
+          },
+        ]}
+      >
+        <ThemedText style={[styles.cardTitle, { color: tokens.text }]}>
+          Purge orphaned images
+        </ThemedText>
+        <ThemedText type="small" style={{ color: tokens.textSecondary }}>
           Removes storage objects whose owning rows are gone (cleans up after
           account deletions and rejected kit photos).
         </ThemedText>
@@ -53,12 +64,12 @@ export function MaintenanceSection() {
           onPress={onPurge}
         />
         {notice ? (
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="small" style={{ color: tokens.textSecondary }}>
             {notice}
           </ThemedText>
         ) : null}
         {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
-      </ThemedView>
+      </View>
     </View>
   );
 }

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { useAdminTheme } from '@/components/admin/AdminThemeContext';
 import { PrimaryButton } from '@/components/primary-button';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
@@ -18,9 +18,9 @@ type Msg = {
 };
 
 // Founder inbox section. RLS on founder_messages already restricts read+update
-// to is_admin; this UI just exercises that. Lifted unchanged from the original
-// standalone src/app/admin/messages.tsx route.
+// to is_admin; this UI just exercises that. Surfaces themed per AdminTheme.
 export function MessagesSection() {
+  const { tokens } = useAdminTheme();
   const [items, setItems] = useState<Msg[]>([]);
   const [listing, setListing] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -74,45 +74,53 @@ export function MessagesSection() {
   return (
     <View style={styles.root}>
       <View style={styles.head}>
-        <ThemedText style={styles.title}>Founder messages</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {items.length === 0 ? 'Admin-only · enforced server-side.' : `${unread} unread · ${items.length} total`}
+        <ThemedText style={[styles.title, { color: tokens.text }]}>Founder messages</ThemedText>
+        <ThemedText type="small" style={{ color: tokens.textSecondary }}>
+          {items.length === 0
+            ? 'Admin-only · enforced server-side.'
+            : `${unread} unread · ${items.length} total`}
         </ThemedText>
       </View>
 
       {listing ? <ActivityIndicator color={Brand.red} /> : null}
       {!listing && items.length === 0 ? (
-        <ThemedText themeColor="textSecondary">No messages yet. 📭</ThemedText>
+        <ThemedText style={{ color: tokens.textSecondary }}>No messages yet. 📭</ThemedText>
       ) : null}
 
       {items.map((m) => {
         const busy = actingId === m.id;
         const when = new Date(m.created_at).toLocaleString();
         return (
-          <ThemedView
+          <View
             key={m.id}
-            type="backgroundElement"
-            style={[styles.card, !m.is_read && styles.cardUnread]}
+            style={[
+              styles.card,
+              {
+                backgroundColor: tokens.surface,
+                borderColor: !m.is_read ? tokens.gold : tokens.border,
+                borderWidth: !m.is_read ? 1 : StyleSheet.hairlineWidth,
+              },
+            ]}
           >
             <View style={styles.cardHead}>
-              <ThemedText style={styles.name}>
+              <ThemedText style={[styles.name, { color: tokens.text }]}>
                 {!m.is_read ? '● ' : ''}
                 {m.sender_name || 'Anonymous'}
               </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
+              <ThemedText type="small" style={{ color: tokens.textSecondary }}>
                 {when}
               </ThemedText>
             </View>
             {m.sender_email ? (
-              <ThemedText type="small" themeColor="textSecondary">
+              <ThemedText type="small" style={{ color: tokens.textSecondary }}>
                 {m.sender_email}
               </ThemedText>
             ) : (
-              <ThemedText type="small" themeColor="textSecondary">
+              <ThemedText type="small" style={{ color: tokens.textSecondary }}>
                 no email — you can’t reply
               </ThemedText>
             )}
-            <ThemedText style={styles.body}>{m.message}</ThemedText>
+            <ThemedText style={[styles.body, { color: tokens.text }]}>{m.message}</ThemedText>
             <View style={styles.actions}>
               <PrimaryButton
                 label={m.is_read ? 'Mark unread' : 'Mark read'}
@@ -122,7 +130,7 @@ export function MessagesSection() {
                 style={styles.act}
               />
             </View>
-          </ThemedView>
+          </View>
         );
       })}
 
@@ -137,7 +145,6 @@ const styles = StyleSheet.create({
   head: { gap: Spacing.half, marginBottom: Spacing.one },
   title: { fontSize: 22, fontWeight: '800' },
   card: { padding: Spacing.two, borderRadius: Radius.card, gap: Spacing.half },
-  cardUnread: { borderColor: Brand.gold, borderWidth: 1 },
   cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.one },
   name: { fontSize: 16, fontWeight: '700', flex: 1 },
   body: { marginTop: Spacing.one, lineHeight: 22 },

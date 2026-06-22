@@ -1,8 +1,8 @@
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { useAdminTheme } from '@/components/admin/AdminThemeContext';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Brand, Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 
 export type AdminSection =
   | 'overview'
@@ -21,8 +21,10 @@ const ITEMS: { key: AdminSection; label: string }[] = [
   { key: 'maintenance', label: 'Maintenance' },
 ];
 
-// Sidebar on desktop (≥1024px), horizontal tabs below. State is owned by the
-// parent so the nav is purely presentational + onSelect.
+// Sidebar on desktop (>=1024px), horizontal tabs below. State is owned by the
+// parent so the nav is purely presentational + onSelect. All surface colours
+// come from the admin theme — the badge stays brand-red across all themes
+// (count notifications are intentionally consistent).
 export const WIDE_BREAKPOINT = 1024;
 
 export function AdminNav({
@@ -32,16 +34,23 @@ export function AdminNav({
 }: {
   current: AdminSection;
   onSelect: (s: AdminSection) => void;
-  /** Optional badge counts (e.g. unread/pending) keyed by section. */
   badges?: Partial<Record<AdminSection, number>>;
 }) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= WIDE_BREAKPOINT;
+  const { tokens } = useAdminTheme();
 
   if (isDesktop) {
     return (
-      <ThemedView type="backgroundElement" style={styles.sidebar}>
-        <ThemedText style={styles.brand}>Admin Control Centre</ThemedText>
+      <View
+        style={[
+          styles.sidebar,
+          { backgroundColor: tokens.surface, borderColor: tokens.border },
+        ]}
+      >
+        <ThemedText style={[styles.brand, { color: tokens.textSecondary }]}>
+          Admin Control Centre
+        </ThemedText>
         {ITEMS.map((it) => (
           <NavItem
             key={it.key}
@@ -52,7 +61,7 @@ export function AdminNav({
             vertical
           />
         ))}
-      </ThemedView>
+      </View>
     );
   }
 
@@ -84,23 +93,34 @@ function NavItem({
   onPress: () => void;
   vertical?: boolean;
 }) {
+  const { tokens } = useAdminTheme();
   return (
     <Pressable
       onPress={onPress}
       style={[
         vertical ? styles.sidebarItem : styles.tabItem,
-        active && (vertical ? styles.sidebarItemActive : styles.tabItemActive),
+        !vertical && { borderColor: tokens.border },
+        active &&
+          (vertical
+            ? { backgroundColor: tokens.navItemSelectedBg }
+            : {
+                backgroundColor: tokens.navItemSelectedBg,
+                borderColor: tokens.accent,
+              }),
       ]}
     >
       <ThemedText
-        style={[styles.itemLabel, active && styles.itemLabelActive]}
-        themeColor={active ? 'text' : 'textSecondary'}
+        style={[
+          styles.itemLabel,
+          { color: active ? tokens.navItemSelectedText : tokens.textSecondary },
+          active && styles.itemLabelActive,
+        ]}
       >
         {label}
       </ThemedText>
       {badge && badge > 0 ? (
-        <View style={styles.badge}>
-          <ThemedText type="small" style={styles.badgeText}>
+        <View style={[styles.badge, { backgroundColor: tokens.accent }]}>
+          <ThemedText type="small" style={[styles.badgeText, { color: tokens.accentText }]}>
             {badge}
           </ThemedText>
         </View>
@@ -114,13 +134,14 @@ const styles = StyleSheet.create({
     width: 240,
     padding: Spacing.two,
     borderRadius: Radius.card,
+    borderWidth: 1,
     gap: Spacing.half,
   },
   brand: {
     fontFamily: 'monospace',
     fontSize: 13,
     marginBottom: Spacing.two,
-    opacity: 0.7,
+    opacity: 0.85,
   },
   sidebarItem: {
     flexDirection: 'row',
@@ -130,7 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.input,
     gap: Spacing.one,
   },
-  sidebarItemActive: { backgroundColor: Colors.dark.backgroundSelected },
 
   tabs: {
     flexDirection: 'row',
@@ -145,10 +165,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     borderRadius: Radius.input,
     borderWidth: 1,
-    borderColor: Colors.dark.border,
     gap: Spacing.half,
   },
-  tabItemActive: { backgroundColor: Colors.dark.backgroundSelected, borderColor: Brand.red },
 
   itemLabel: { flex: 1, fontSize: 15 },
   itemLabelActive: { fontWeight: '700' },
@@ -158,9 +176,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 11,
-    backgroundColor: Brand.red,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { color: '#fff', fontWeight: '700', fontSize: 11 },
+  badgeText: { fontWeight: '700', fontSize: 11 },
 });

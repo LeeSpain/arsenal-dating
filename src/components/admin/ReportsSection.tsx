@@ -2,9 +2,9 @@ import { Image } from 'expo-image';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { useAdminTheme } from '@/components/admin/AdminThemeContext';
 import { PrimaryButton } from '@/components/primary-button';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
@@ -22,10 +22,12 @@ type Item = {
   reportsAgainstUser: number;
 };
 
-// Reports & moderation. Lifted from the original src/app/admin/reports.tsx
-// route with every action preserved (reviewing / dismiss / resolve / suspend /
-// unsuspend / remove). report-review function enforces is_admin server-side.
+// Reports & moderation. Every action preserved (reviewing / dismiss / resolve /
+// suspend / unsuspend / remove). report-review function enforces is_admin
+// server-side. Surfaces themed per AdminTheme. Remove-user button keeps the
+// destructive red regardless of theme — safety-critical action.
 export function ReportsSection() {
+  const { tokens } = useAdminTheme();
   const [items, setItems] = useState<Item[]>([]);
   const [listing, setListing] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -66,43 +68,57 @@ export function ReportsSection() {
   return (
     <View style={styles.root}>
       <View style={styles.head}>
-        <ThemedText style={styles.title}>Reports & moderation</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText style={[styles.title, { color: tokens.text }]}>Reports & moderation</ThemedText>
+        <ThemedText type="small" style={{ color: tokens.textSecondary }}>
           Review and act. Every state change is logged server-side.
         </ThemedText>
       </View>
 
       {listing ? <ActivityIndicator color={Brand.red} /> : null}
       {!listing && items.length === 0 ? (
-        <ThemedText themeColor="textSecondary">Nothing to review. 🎉</ThemedText>
+        <ThemedText style={{ color: tokens.textSecondary }}>Nothing to review. 🎉</ThemedText>
       ) : null}
 
       {items.map((it) => {
         const busy = actingId === it.reportId;
         return (
-          <ThemedView key={it.reportId} type="backgroundElement" style={styles.card}>
+          <View
+            key={it.reportId}
+            style={[
+              styles.card,
+              {
+                backgroundColor: tokens.surface,
+                borderColor: tokens.border,
+                borderWidth: StyleSheet.hairlineWidth,
+              },
+            ]}
+          >
             <View style={styles.cardHead}>
               {it.reportedPhotoUrl ? (
                 <Image source={{ uri: it.reportedPhotoUrl }} style={styles.photo} contentFit="cover" />
               ) : (
-                <View style={[styles.photo, styles.noPhoto]} />
+                <View style={[styles.photo, { backgroundColor: tokens.surfaceRaised }]} />
               )}
               <View style={styles.headText}>
-                <ThemedText style={styles.name}>
+                <ThemedText style={[styles.name, { color: tokens.text }]}>
                   {it.reportedName ?? 'Unknown'}
                   {it.reportedSuspended ? '  ⏸ suspended' : ''}
                 </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
+                <ThemedText type="small" style={{ color: tokens.textSecondary }}>
                   Reported by {it.reporterName ?? 'someone'} · {it.reportsAgainstUser} report
                   {it.reportsAgainstUser === 1 ? '' : 's'} total
                 </ThemedText>
               </View>
             </View>
-            <ThemedText type="small" style={styles.reason}>
+            <ThemedText type="small" style={[styles.reason, { color: tokens.text }]}>
               {it.reason}
               {it.status !== 'open' ? `  ·  ${it.status}` : ''}
             </ThemedText>
-            {it.details ? <ThemedText type="small">{it.details}</ThemedText> : null}
+            {it.details ? (
+              <ThemedText type="small" style={{ color: tokens.text }}>
+                {it.details}
+              </ThemedText>
+            ) : null}
 
             <View style={styles.actions}>
               <PrimaryButton label="Reviewing" variant="secondary" onPress={() => act(it.reportId, 'reviewing')} style={styles.act} />
@@ -117,7 +133,7 @@ export function ReportsSection() {
               )}
               <PrimaryButton label="Remove user" loading={busy} onPress={() => act(it.reportId, 'remove')} style={[styles.act, styles.danger]} />
             </View>
-          </ThemedView>
+          </View>
         );
       })}
 
@@ -134,7 +150,6 @@ const styles = StyleSheet.create({
   card: { padding: Spacing.two, borderRadius: Radius.card, gap: Spacing.one },
   cardHead: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
   photo: { width: 56, height: 56, borderRadius: 12 },
-  noPhoto: { backgroundColor: '#26282C' },
   headText: { flex: 1 },
   name: { fontSize: 16, fontWeight: '700' },
   reason: { fontWeight: '600' },

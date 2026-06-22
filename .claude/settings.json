@@ -51,10 +51,32 @@
       "Read(//Users/leewakeman/.Trash//**)",
       "Bash(cd /Users/leewakeman/Desktop/Arsenal-Dating; echo \"=== landing folder tree ===\"; find landing -name \"*.png\" -o -name \"*.jpg\" -o -name \"*.jpeg\" 2>/dev/null | head -20; echo \"=== Downloads dir ===\"; ls -t ~/Downloads/ 2>/dev/null | head -10; echo \"=== Desktop dir ===\"; ls -t ~/Desktop/ 2>/dev/null | head -10)",
       "Read(//Users/leewakeman/Downloads//**)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(node -e \"require\\('sharp'\\);console.log\\('sharp:', require\\('sharp/package.json'\\).version\\)\")",
+      "Bash(curl -s http://localhost:4174/)",
+      "Bash(curl -s http://localhost:4174/robots.txt)",
+      "Bash(curl -s http://localhost:4174/sitemap.xml)",
+      "Bash(git checkout *)",
+      "Bash(node --experimental-strip-types --env-file=.env -e ' *)",
+      "Bash(node --env-file=.env /tmp/admin-smoke.mjs)",
+      "Bash(node --env-file=.env scripts/_smoke-admin.mjs)",
+      "Bash(git pull *)",
+      "Bash(gh pr create --base main --head feat/footer-admin-link --title 'Add Admin link to the landing footer' --body ' *)",
+      "Bash(gh pr create --base main --head feat/notify-emails --title 'Add email notifications for contact and waitlist' --body ' *)",
+      "Bash(command -v vercel)",
+      "Bash(vercel --version)",
+      "Bash(vercel env *)",
+      "Bash(gh pr create --base main --head feat/welcome-coming-soon --title 'Replace welcome screen with Coming Soon; add CORS to waitlist endpoint' --body ' *)",
+      "Bash(gh pr create --base main --head feat/footer-admin-link-v2 --title 'Add Admin link to the landing footer' --body ' *)",
+      "Bash(git rm *)",
+      "Bash(gh pr create --base main --head feat/admin-control-centre --title 'Admin Control Centre — unified /admin dashboard' --body ' *)",
+      "Bash(gh pr create --base main --head feat/admin-theming --title 'Admin theming + personalised welcome' --body ' *)",
+      "Bash(gh pr *)"
     ],
     "additionalDirectories": [
-      "/Users/leewakeman/Desktop/Arsenal-Dating/.claude"
+      "/Users/leewakeman/Desktop/Arsenal-Dating/.claude",
+      "/tmp",
+      "/private/tmp"
     ]
   }
 }

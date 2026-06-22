@@ -1,14 +1,11 @@
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
-import { ScreenShell } from '@/components/screen-shell';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
-import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
 type Item = {
@@ -25,11 +22,10 @@ type Item = {
   reportsAgainstUser: number;
 };
 
-// Founder-only moderation queue. is_admin is enforced inside the report-review
-// function; this gating is only for the UI.
-export default function Reports() {
-  const router = useRouter();
-  const { profileStatus, loading } = useSession();
+// Reports & moderation. Lifted from the original src/app/admin/reports.tsx
+// route with every action preserved (reviewing / dismiss / resolve / suspend /
+// unsuspend / remove). report-review function enforces is_admin server-side.
+export function ReportsSection() {
   const [items, setItems] = useState<Item[]>([]);
   const [listing, setListing] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -49,8 +45,8 @@ export default function Reports() {
   }, []);
 
   useEffect(() => {
-    if (profileStatus?.isAdmin) load();
-  }, [profileStatus?.isAdmin, load]);
+    load();
+  }, [load]);
 
   async function act(reportId: string, action: string) {
     setActingId(reportId);
@@ -67,27 +63,15 @@ export default function Reports() {
     await load();
   }
 
-  if (loading) {
-    return (
-      <ScreenShell title="Reports">
-        <ActivityIndicator color={Brand.red} />
-      </ScreenShell>
-    );
-  }
-  if (!profileStatus?.isAdmin) {
-    return (
-      <ScreenShell title="Reports">
-        <ThemedText themeColor="textSecondary">You don’t have access to this.</ThemedText>
-        <PrimaryButton label="Back" variant="secondary" onPress={() => router.replace('/')} />
-      </ScreenShell>
-    );
-  }
-
   return (
-    <ScreenShell
-      title="Reports"
-      subtitle="Review and act. Admin-only, enforced server-side."
-    >
+    <View style={styles.root}>
+      <View style={styles.head}>
+        <ThemedText style={styles.title}>Reports & moderation</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          Review and act. Every state change is logged server-side.
+        </ThemedText>
+      </View>
+
       {listing ? <ActivityIndicator color={Brand.red} /> : null}
       {!listing && items.length === 0 ? (
         <ThemedText themeColor="textSecondary">Nothing to review. 🎉</ThemedText>
@@ -97,7 +81,7 @@ export default function Reports() {
         const busy = actingId === it.reportId;
         return (
           <ThemedView key={it.reportId} type="backgroundElement" style={styles.card}>
-            <View style={styles.head}>
+            <View style={styles.cardHead}>
               {it.reportedPhotoUrl ? (
                 <Image source={{ uri: it.reportedPhotoUrl }} style={styles.photo} contentFit="cover" />
               ) : (
@@ -139,13 +123,16 @@ export default function Reports() {
 
       {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
       <PrimaryButton label="Refresh" variant="secondary" onPress={load} />
-    </ScreenShell>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { gap: Spacing.two },
+  head: { gap: Spacing.half, marginBottom: Spacing.one },
+  title: { fontSize: 22, fontWeight: '800' },
   card: { padding: Spacing.two, borderRadius: Radius.card, gap: Spacing.one },
-  head: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
+  cardHead: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
   photo: { width: 56, height: 56, borderRadius: 12 },
   noPhoto: { backgroundColor: '#26282C' },
   headText: { flex: 1 },

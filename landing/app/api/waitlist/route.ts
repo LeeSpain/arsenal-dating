@@ -31,11 +31,21 @@ export async function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders });
 }
 
+// Tag each signup with where it came from. The DB CHECK constraint pins the
+// allowed values; an unknown / missing value falls back to 'landing' (the
+// long-running default, also enforced by the column DEFAULT).
+const ALLOWED_SOURCES = new Set(['landing', 'app']);
+function normaliseSource(raw: unknown): 'landing' | 'app' {
+  return typeof raw === 'string' && ALLOWED_SOURCES.has(raw) ? (raw as 'landing' | 'app') : 'landing';
+}
+
 export async function POST(req: Request) {
   let email = '';
+  let source: 'landing' | 'app' = 'landing';
   try {
     const body = await req.json();
     email = String(body?.email ?? '');
+    source = normaliseSource(body?.source);
   } catch {
     return json({ error: 'bad_request' }, { status: 400 });
   }
@@ -51,12 +61,12 @@ export async function POST(req: Request) {
   }
 
   const supabase = createClient(url, key, { auth: { persistSession: false } });
-  const { error } = await supabase.from('waitlist').insert({ email });
+  const { error } = await supabase.from('waitlist').insert({ email, source });
   if (error) {
     // Already signed up — treat as success (don't reveal membership).
     if (error.code === '23505') return json({ ok: true, already: true });
     return json({ error: 'failed' }, { status: 500 });
   }
-  await notify('New waitlist signup', `${email} just joined the waitlist.`);
+  await notify('New waitlist signup', `${email} just joined the waitlist (via ${source}).`);
   return json({ ok: true });
 }

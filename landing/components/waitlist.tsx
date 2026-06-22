@@ -22,7 +22,7 @@ export function Waitlist() {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: value }),
+        body: JSON.stringify({ email: value, source: 'landing' }),
       });
       if (res.ok) {
         setStatus('done');

@@ -37,7 +37,7 @@ export default function Welcome() {
       const res = await fetch(WAITLIST_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: value }),
+        body: JSON.stringify({ email: value, source: 'app' }),
       });
       if (res.ok) {
         setStatus('done');

@@ -1,13 +1,10 @@
-import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
-import { ScreenShell } from '@/components/screen-shell';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
-import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
 type Msg = {
@@ -20,12 +17,10 @@ type Msg = {
   read_at: string | null;
 };
 
-// Founder inbox for messages sent via the landing page. Admin-only; the
-// underlying RLS policy on founder_messages enforces this server-side
-// regardless of whether this UI guard runs.
-export default function Messages() {
-  const router = useRouter();
-  const { profileStatus, loading } = useSession();
+// Founder inbox section. RLS on founder_messages already restricts read+update
+// to is_admin; this UI just exercises that. Lifted unchanged from the original
+// standalone src/app/admin/messages.tsx route.
+export function MessagesSection() {
   const [items, setItems] = useState<Msg[]>([]);
   const [listing, setListing] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -49,8 +44,8 @@ export default function Messages() {
   }, []);
 
   useEffect(() => {
-    if (profileStatus?.isAdmin) load();
-  }, [profileStatus?.isAdmin, load]);
+    load();
+  }, [load]);
 
   async function toggleRead(m: Msg) {
     setActingId(m.id);
@@ -74,33 +69,17 @@ export default function Messages() {
     );
   }
 
-  if (loading) {
-    return (
-      <ScreenShell title="Messages">
-        <ActivityIndicator color={Brand.red} />
-      </ScreenShell>
-    );
-  }
-  if (!profileStatus?.isAdmin) {
-    return (
-      <ScreenShell title="Messages">
-        <ThemedText themeColor="textSecondary">You don’t have access to this.</ThemedText>
-        <PrimaryButton label="Back" variant="secondary" onPress={() => router.replace('/')} />
-      </ScreenShell>
-    );
-  }
-
   const unread = items.filter((i) => !i.is_read).length;
 
   return (
-    <ScreenShell
-      title="Messages"
-      subtitle={
-        items.length === 0
-          ? 'Founder inbox · admin-only, enforced server-side.'
-          : `${unread} unread · ${items.length} total`
-      }
-    >
+    <View style={styles.root}>
+      <View style={styles.head}>
+        <ThemedText style={styles.title}>Founder messages</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {items.length === 0 ? 'Admin-only · enforced server-side.' : `${unread} unread · ${items.length} total`}
+        </ThemedText>
+      </View>
+
       {listing ? <ActivityIndicator color={Brand.red} /> : null}
       {!listing && items.length === 0 ? (
         <ThemedText themeColor="textSecondary">No messages yet. 📭</ThemedText>
@@ -115,7 +94,7 @@ export default function Messages() {
             type="backgroundElement"
             style={[styles.card, !m.is_read && styles.cardUnread]}
           >
-            <View style={styles.head}>
+            <View style={styles.cardHead}>
               <ThemedText style={styles.name}>
                 {!m.is_read ? '● ' : ''}
                 {m.sender_name || 'Anonymous'}
@@ -149,14 +128,17 @@ export default function Messages() {
 
       {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
       <PrimaryButton label="Refresh" variant="secondary" onPress={load} />
-    </ScreenShell>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { gap: Spacing.two },
+  head: { gap: Spacing.half, marginBottom: Spacing.one },
+  title: { fontSize: 22, fontWeight: '800' },
   card: { padding: Spacing.two, borderRadius: Radius.card, gap: Spacing.half },
   cardUnread: { borderColor: Brand.gold, borderWidth: 1 },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.one },
+  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.one },
   name: { fontSize: 16, fontWeight: '700', flex: 1 },
   body: { marginTop: Spacing.one, lineHeight: 22 },
   actions: { flexDirection: 'row', gap: Spacing.one, marginTop: Spacing.one },

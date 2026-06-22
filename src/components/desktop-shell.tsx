@@ -1,3 +1,4 @@
+import { usePathname } from 'expo-router';
 import { type ReactNode } from 'react';
 import { Image, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
@@ -28,8 +29,11 @@ const INNER_RADIUS = OUTER_RADIUS - BEZEL;
  */
 export function DesktopShell({ children }: { children: ReactNode }) {
   const { width: viewW, height: viewH } = useWindowDimensions();
+  const pathname = usePathname();
 
-  if (Platform.OS !== 'web' || viewW < WIDE_BREAKPOINT) {
+  // Admin Control Centre owns its own full-width desktop layout — opt it out
+  // of the phone frame so it can use the whole viewport.
+  if (Platform.OS !== 'web' || viewW < WIDE_BREAKPOINT || pathname.startsWith('/admin')) {
     return <>{children}</>;
   }
 

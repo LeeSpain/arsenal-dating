@@ -1,23 +1,19 @@
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
-import { ScreenShell } from '@/components/screen-shell';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
-import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
 type Item = { profileId: string; displayName: string | null; kitPhotoUrl: string | null };
 
-// Founder-only kit-review queue. The is_admin check here is only for UX (show/hide);
-// the actual authorization is enforced inside the kit-review Edge Function.
-export default function KitReview() {
-  const router = useRouter();
-  const { profileStatus, loading } = useSession();
+// Kit-review queue. Lifted from the original standalone src/app/admin/kit-review.tsx
+// route — same Edge Function calls, same UI shape. The kit-review function
+// enforces is_admin server-side; the cosmetic gate lives in admin/index.tsx.
+export function KitReviewSection() {
   const [items, setItems] = useState<Item[]>([]);
   const [listing, setListing] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -37,8 +33,8 @@ export default function KitReview() {
   }, []);
 
   useEffect(() => {
-    if (profileStatus?.isAdmin) load();
-  }, [profileStatus?.isAdmin, load]);
+    load();
+  }, [load]);
 
   async function decide(profileId: string, decision: 'approved' | 'rejected') {
     setActingId(profileId);
@@ -55,28 +51,15 @@ export default function KitReview() {
     setItems((prev) => prev.filter((i) => i.profileId !== profileId));
   }
 
-  if (loading) {
-    return (
-      <ScreenShell title="Kit review">
-        <ActivityIndicator color={Brand.red} />
-      </ScreenShell>
-    );
-  }
-  if (!profileStatus?.isAdmin) {
-    return (
-      <ScreenShell title="Kit review">
-        <ThemedText themeColor="textSecondary">You don’t have access to this.</ThemedText>
-        <PrimaryButton label="Back" variant="secondary" onPress={() => router.replace('/')} />
-      </ScreenShell>
-    );
-  }
-
   return (
-    <ScreenShell
-      title="Kit review"
-      subtitle="Pass = clearly wearing a recognisable Arsenal shirt."
-      note="Approving adds the verified badge. This queue and the photos are admin-only, enforced server-side."
-    >
+    <View style={styles.root}>
+      <View style={styles.head}>
+        <ThemedText style={styles.title}>Kit review</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          Pass = clearly wearing a recognisable Arsenal shirt. Approving adds the verified badge.
+        </ThemedText>
+      </View>
+
       {listing ? <ActivityIndicator color={Brand.red} /> : null}
       {!listing && items.length === 0 ? (
         <ThemedText themeColor="textSecondary">Nothing pending right now. 🎉</ThemedText>
@@ -111,11 +94,14 @@ export default function KitReview() {
 
       {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
       <PrimaryButton label="Refresh" variant="secondary" onPress={load} />
-    </ScreenShell>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { gap: Spacing.two },
+  head: { gap: Spacing.half, marginBottom: Spacing.one },
+  title: { fontSize: 22, fontWeight: '800' },
   card: { padding: Spacing.two, borderRadius: Radius.card, gap: Spacing.one },
   photo: { width: '100%', height: 280, borderRadius: Radius.card },
   name: { fontWeight: '700' },

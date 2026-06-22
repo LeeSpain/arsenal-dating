@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { notify } from '@/lib/notify';
+
 // Server-side. Forwards landing-page contact-form submissions to the MAIN
 // Supabase project's founder_messages table, using the anon/publishable key
 // and the table's anon-insert RLS policy (no service key, no read-back).
@@ -51,5 +53,9 @@ export async function POST(req: Request) {
     }
     return Response.json({ error: 'failed' }, { status: 500 });
   }
+  await notify(
+    `New message from ${name || 'someone'}`,
+    `${message}\n\n— ${name || 'Anonymous'}${email ? ` <${email}>` : ' (no email)'}`,
+  );
   return Response.json({ ok: true });
 }

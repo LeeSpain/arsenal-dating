@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Share, StyleSheet, View } from 'react-native';
 
+import { useAdminTheme } from '@/components/admin/AdminThemeContext';
 import { PrimaryButton } from '@/components/primary-button';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
@@ -11,12 +11,11 @@ type Row = { id: string; email: string; created_at: string; source: string | nul
 
 // NEW in the Control Centre: admin-only listing of waitlist signups + a CSV
 // export. The admin-RLS policy added by 20260527090000_admin_waitlist_select.sql
-// is the real gate — without is_admin = true on the caller's profile, the
-// SELECT below returns zero rows. The `source` column added by the sibling
-// migration distinguishes landing-page vs app Coming-Soon signups.
+// is the real gate; this UI just consumes it. Surfaces themed per AdminTheme.
 const PAGE_LIMIT = 1000;
 
 export function WaitlistSection() {
+  const { tokens } = useAdminTheme();
   const [rows, setRows] = useState<Row[]>([]);
   const [count, setCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,8 +81,8 @@ export function WaitlistSection() {
   return (
     <View style={styles.root}>
       <View style={styles.head}>
-        <ThemedText style={styles.title}>Waitlist & signups</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText style={[styles.title, { color: tokens.text }]}>Waitlist & signups</ThemedText>
+        <ThemedText type="small" style={{ color: tokens.textSecondary }}>
           {count === null
             ? 'Admin-only · enforced server-side.'
             : `${count} total${rows.length < (count ?? 0) ? ` · showing latest ${rows.length}` : ''}`}
@@ -105,28 +104,43 @@ export function WaitlistSection() {
         />
       </View>
       {exportNotice ? (
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText type="small" style={{ color: tokens.textSecondary }}>
           {exportNotice}
         </ThemedText>
       ) : null}
 
       {loading ? <ActivityIndicator color={Brand.red} /> : null}
       {!loading && rows.length === 0 ? (
-        <ThemedText themeColor="textSecondary">No signups yet.</ThemedText>
+        <ThemedText style={{ color: tokens.textSecondary }}>No signups yet.</ThemedText>
       ) : null}
 
       {rows.map((r) => (
-        <ThemedView key={r.id} type="backgroundElement" style={styles.row}>
+        <View
+          key={r.id}
+          style={[
+            styles.row,
+            {
+              backgroundColor: tokens.surface,
+              borderColor: tokens.border,
+              borderWidth: StyleSheet.hairlineWidth,
+            },
+          ]}
+        >
           <View style={styles.rowMain}>
-            <ThemedText style={styles.email}>{r.email}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText style={[styles.email, { color: tokens.text }]}>{r.email}</ThemedText>
+            <ThemedText type="small" style={{ color: tokens.textSecondary }}>
               {new Date(r.created_at).toLocaleString()}
             </ThemedText>
           </View>
-          <ThemedText type="small" style={styles.sourceBadge}>
-            {r.source ?? '—'}
-          </ThemedText>
-        </ThemedView>
+          <View style={[styles.sourceBadge, { borderColor: tokens.border, backgroundColor: tokens.surfaceRaised }]}>
+            <ThemedText
+              type="small"
+              style={[styles.sourceBadgeText, { color: tokens.textSecondary }]}
+            >
+              {r.source ?? '—'}
+            </ThemedText>
+          </View>
+        </View>
       ))}
 
       {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
@@ -150,6 +164,12 @@ const styles = StyleSheet.create({
   },
   rowMain: { flex: 1, gap: 2 },
   email: { fontSize: 15, fontWeight: '600' },
-  sourceBadge: { fontFamily: 'monospace' },
+  sourceBadge: {
+    paddingHorizontal: Spacing.one,
+    paddingVertical: 2,
+    borderRadius: Radius.input,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  sourceBadgeText: { fontFamily: 'monospace' },
   error: { color: Functional.error },
 });

@@ -2,18 +2,19 @@ import { Image } from 'expo-image';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { useAdminTheme } from '@/components/admin/AdminThemeContext';
 import { PrimaryButton } from '@/components/primary-button';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Brand, Functional, Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
 type Item = { profileId: string; displayName: string | null; kitPhotoUrl: string | null };
 
-// Kit-review queue. Lifted from the original standalone src/app/admin/kit-review.tsx
-// route — same Edge Function calls, same UI shape. The kit-review function
+// Kit-review queue. Same Edge Function calls + UI shape as the original
+// standalone route; surfaces themed per AdminTheme. The kit-review function
 // enforces is_admin server-side; the cosmetic gate lives in admin/index.tsx.
 export function KitReviewSection() {
+  const { tokens } = useAdminTheme();
   const [items, setItems] = useState<Item[]>([]);
   const [listing, setListing] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -54,27 +55,41 @@ export function KitReviewSection() {
   return (
     <View style={styles.root}>
       <View style={styles.head}>
-        <ThemedText style={styles.title}>Kit review</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText style={[styles.title, { color: tokens.text }]}>Kit review</ThemedText>
+        <ThemedText type="small" style={{ color: tokens.textSecondary }}>
           Pass = clearly wearing a recognisable Arsenal shirt. Approving adds the verified badge.
         </ThemedText>
       </View>
 
       {listing ? <ActivityIndicator color={Brand.red} /> : null}
       {!listing && items.length === 0 ? (
-        <ThemedText themeColor="textSecondary">Nothing pending right now. 🎉</ThemedText>
+        <ThemedText style={{ color: tokens.textSecondary }}>
+          Nothing pending right now. 🎉
+        </ThemedText>
       ) : null}
 
       {items.map((it) => (
-        <ThemedView key={it.profileId} type="backgroundElement" style={styles.card}>
+        <View
+          key={it.profileId}
+          style={[
+            styles.card,
+            {
+              backgroundColor: tokens.surface,
+              borderColor: tokens.border,
+              borderWidth: StyleSheet.hairlineWidth,
+            },
+          ]}
+        >
           {it.kitPhotoUrl ? (
             <Image source={{ uri: it.kitPhotoUrl }} style={styles.photo} contentFit="cover" />
           ) : (
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText type="small" style={{ color: tokens.textSecondary }}>
               (no photo)
             </ThemedText>
           )}
-          <ThemedText style={styles.name}>{it.displayName ?? 'Unnamed'}</ThemedText>
+          <ThemedText style={[styles.name, { color: tokens.text }]}>
+            {it.displayName ?? 'Unnamed'}
+          </ThemedText>
           <View style={styles.actions}>
             <PrimaryButton
               label="Approve"
@@ -89,7 +104,7 @@ export function KitReviewSection() {
               style={styles.actionBtn}
             />
           </View>
-        </ThemedView>
+        </View>
       ))}
 
       {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}

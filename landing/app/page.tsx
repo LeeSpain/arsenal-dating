@@ -6,6 +6,7 @@ import { Hero } from '@/components/hero';
 import { HowItWorks } from '@/components/how-it-works';
 import { ValueProps } from '@/components/value-props';
 import { Waitlist } from '@/components/waitlist';
+import { WaitlistPopup } from '@/components/waitlist-popup';
 import { Why } from '@/components/why';
 
 export default function Home() {
@@ -20,6 +21,7 @@ export default function Home() {
       <Waitlist />
       <Contact />
       <Footer />
+      <WaitlistPopup />
     </main>
   );
 }

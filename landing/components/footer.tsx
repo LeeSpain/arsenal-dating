@@ -24,7 +24,7 @@ export function Footer() {
             Terms of Use
           </Link>
           <a
-            href={`${APP_URL}/sign-in`}
+            href={`${APP_URL}/admin`}
             className="text-text-secondary transition-colors hover:text-text"
           >
             Admin

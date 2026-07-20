@@ -80,6 +80,135 @@ export function OverviewSection() {
           <Card label="Unread messages" value={stats.unreadFounderMessages} attention />
         </View>
       )}
+
+      <SignupsSparkline />
+    </View>
+  );
+}
+
+const SPARK_DAYS = 14;
+const SPARK_HEIGHT = 64;
+
+// Local-date key (year-month-day) so buckets follow the admin's calendar day,
+// not UTC. Two timestamps land in the same bucket iff they're the same local
+// date.
+function localDayKey(d: Date): string {
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+// "Signups — last 14 days" bar chart. Reads waitlist.created_at directly with
+// the admin SELECT RLS policy (20260527090000_admin_waitlist_select.sql),
+// buckets client-side by local day, and draws plain <View> bars — no chart lib.
+function SignupsSparkline() {
+  const { tokens } = useAdminTheme();
+  const [bars, setBars] = useState<{ key: string; label: string; value: number }[] | null>(null);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+
+      // Build the 14 day buckets (oldest → today) from local midnight today.
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const days: { key: string; label: string }[] = [];
+      for (let i = SPARK_DAYS - 1; i >= 0; i--) {
+        const d = new Date(startOfToday);
+        d.setDate(startOfToday.getDate() - i);
+        days.push({
+          key: localDayKey(d),
+          label: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+        });
+      }
+      // gte bound = local midnight of the oldest bucket.
+      const windowStart = new Date(startOfToday);
+      windowStart.setDate(startOfToday.getDate() - (SPARK_DAYS - 1));
+
+      const { data, error: qErr } = await supabase
+        .from('waitlist')
+        .select('created_at')
+        .gte('created_at', windowStart.toISOString());
+
+      if (cancelled) return;
+
+      if (qErr) {
+        setError('Could not load signups.');
+        setBars(null);
+        setLoading(false);
+        return;
+      }
+
+      const counts = new Map<string, number>(days.map((d) => [d.key, 0]));
+      for (const row of (data ?? []) as { created_at: string }[]) {
+        const key = localDayKey(new Date(row.created_at));
+        if (counts.has(key)) counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+
+      const built = days.map((d) => ({ ...d, value: counts.get(d.key) ?? 0 }));
+      setBars(built);
+      setTotal(built.reduce((sum, b) => sum + b.value, 0));
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const max = bars ? Math.max(1, ...bars.map((b) => b.value)) : 1;
+
+  return (
+    <View style={[styles.sparkCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+      <View style={styles.sparkHeader}>
+        <ThemedText type="small" style={{ color: tokens.text }}>
+          Signups — last 14 days
+        </ThemedText>
+        {bars ? (
+          <ThemedText type="small" style={{ color: tokens.textSecondary }}>
+            {total} total
+          </ThemedText>
+        ) : null}
+      </View>
+
+      {loading ? (
+        <ActivityIndicator color={Brand.red} />
+      ) : error || !bars ? (
+        <ThemedText type="small" style={{ color: tokens.textSecondary }}>
+          {error ?? 'Signups unavailable.'}
+        </ThemedText>
+      ) : (
+        <>
+          <View style={styles.sparkBars}>
+            {bars.map((b) => {
+              const h = b.value > 0 ? Math.max(3, Math.round((b.value / max) * SPARK_HEIGHT)) : 0;
+              return (
+                <View key={b.key} style={[styles.sparkCol, { borderBottomColor: tokens.border }]}>
+                  <View
+                    style={{
+                      height: h,
+                      width: '100%',
+                      backgroundColor: tokens.accent,
+                      borderTopLeftRadius: 2,
+                      borderTopRightRadius: 2,
+                    }}
+                  />
+                </View>
+              );
+            })}
+          </View>
+          <View style={styles.sparkAxis}>
+            <ThemedText type="small" style={{ color: tokens.textSecondary }}>
+              {bars[0].label}
+            </ThemedText>
+            <ThemedText type="small" style={{ color: tokens.textSecondary }}>
+              {bars[bars.length - 1].label}
+            </ThemedText>
+          </View>
+        </>
+      )}
     </View>
   );
 }
@@ -162,4 +291,31 @@ const styles = StyleSheet.create({
   },
   value: { fontSize: 32, fontWeight: '800' },
   error: { color: Functional.error },
+  sparkCard: {
+    padding: Spacing.two,
+    borderRadius: Radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.one,
+  },
+  sparkHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sparkBars: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: SPARK_HEIGHT,
+    gap: Spacing.half,
+  },
+  sparkCol: {
+    flex: 1,
+    height: SPARK_HEIGHT,
+    justifyContent: 'flex-end',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  sparkAxis: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 });

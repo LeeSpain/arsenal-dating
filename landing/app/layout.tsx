@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next';
 import type { Metadata, Viewport } from 'next';
 import { Archivo, Inter } from 'next/font/google';
 
@@ -69,7 +70,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${inter.variable} ${archivo.variable}`}
     >
-      <body className="bg-bg text-text font-sans antialiased">{children}</body>
+      <body className="bg-bg text-text font-sans antialiased">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

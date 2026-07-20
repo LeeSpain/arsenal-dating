@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -50,7 +50,7 @@ export default function AdminControlCentre() {
 
 function AdminControlCentreInner() {
   const router = useRouter();
-  const { profileStatus, loading } = useSession();
+  const { session, profileStatus, loading } = useSession();
   const { width } = useWindowDimensions();
   const isDesktop = width >= WIDE_BREAKPOINT;
   const { tokens } = useAdminTheme();
@@ -87,6 +87,11 @@ function AdminControlCentreInner() {
         <ActivityIndicator color={Brand.red} />
       </ScreenShell>
     );
+  }
+  // Logged out entirely: send them to sign in, then bounce back to /admin.
+  // (A real non-admin who IS logged in still hits the refusal gate below.)
+  if (!session) {
+    return <Redirect href="/sign-in?returnTo=/admin" />;
   }
   if (!profileStatus?.isAdmin) {
     return (

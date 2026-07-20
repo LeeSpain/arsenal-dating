@@ -1,4 +1,4 @@
-import { Link, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function SignIn() {
   const router = useRouter();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -32,8 +33,15 @@ export default function SignIn() {
       setError(signErr.message);
       return;
     }
-    // Let the entry router send them to the right place (age gate / onboarding / deck).
-    router.replace('/');
+    // Honour an internal returnTo (e.g. /admin) if present; otherwise let the
+    // entry router send them to the right place (age gate / onboarding / deck).
+    // Only same-origin paths are allowed — must start with a single '/' so a
+    // protocol-relative '//host' can't be used as an open redirect.
+    const dest =
+      typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
+        ? returnTo
+        : '/';
+    router.replace(dest);
   }
 
   return (

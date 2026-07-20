@@ -20,7 +20,10 @@ export default function Index() {
   // a fully-onboarded session, mid-recovery means "go set a new password".
   if (isPasswordRecovery) return <Redirect href="/reset-password" />;
   if (!session) return <Redirect href="/welcome" />;
-  if (profileStatus?.isSuspended) return <Redirect href="/suspended" />;
+  // Admin-only lock during Coming Soon: a logged-in non-admin only ever sees the
+  // Coming Soon / waitlist screen. Only admins continue into the app.
+  if (!profileStatus?.isAdmin) return <Redirect href="/welcome" />;
+  if (profileStatus.isSuspended) return <Redirect href="/suspended" />;
   if (!profileStatus?.exists) return <Redirect href="/age-gate" />;
   if (!profileStatus.onboardingCompleted) {
     // Resume at the step they left off on.

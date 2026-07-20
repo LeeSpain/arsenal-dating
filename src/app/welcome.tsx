@@ -9,11 +9,12 @@ import { ThemedText } from '@/components/themed-text';
 import { Functional, Spacing } from '@/constants/theme';
 
 // "Coming Soon" stand-in for the app's public sign-up flow while we finish
-// building. Public sign-ups are intentionally OFF — the only way in is the
-// quiet "Sign in" link at the bottom, used by the founder/admin to keep
-// working on the live build. The waitlist submission goes to the landing
-// site's existing /api/waitlist endpoint, which stores it AND emails the
-// founder via the notifier wired in earlier.
+// building. Public sign-ups are intentionally OFF, and there is NO visible
+// entry point here — the public only ever sees Coming Soon + waitlist capture.
+// The founder/admin reaches sign-in via the landing site's footer Admin link.
+// The waitlist submission goes to the landing site's existing /api/waitlist
+// endpoint, which stores it AND emails the founder via the notifier wired in
+// earlier.
 const WAITLIST_URL = 'https://www.arsenaldating.com/api/waitlist';
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -93,12 +94,6 @@ export default function Welcome() {
           About this project
         </ThemedText>
       </Link>
-
-      <Link href="/sign-in" style={styles.signInLink}>
-        <ThemedText themeColor="textSecondary" type="small">
-          Sign in
-        </ThemedText>
-      </Link>
     </ScreenShell>
   );
 }
@@ -111,5 +106,4 @@ const styles = StyleSheet.create({
   successLine: { fontWeight: '600' },
   error: { color: Functional.error },
   aboutLink: { marginTop: Spacing.three, alignSelf: 'center' },
-  signInLink: { marginTop: Spacing.one, alignSelf: 'center' },
 });

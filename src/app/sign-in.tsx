@@ -71,11 +71,6 @@ export default function SignIn() {
           Forgot password?
         </ThemedText>
       </Link>
-      <Link href="/sign-up" style={styles.alt}>
-        <ThemedText type="small" themeColor="accent">
-          Create an account
-        </ThemedText>
-      </Link>
     </ScreenShell>
   );
 }

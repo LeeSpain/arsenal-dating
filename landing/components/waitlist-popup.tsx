@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-// One-time waitlist nudge. Shows a centered modal 10s after mount, but only if
+// One-time waitlist nudge. Shows a centered modal 5s after mount, but only if
 // the user hasn't already seen it in this browser. Submitting OR dismissing
 // sets the localStorage flag so it never shows again.
 const STORAGE_KEY = 'arsenal-waitlist-popup-v1';
-const DELAY_MS = 10_000;
+const DELAY_MS = 5_000;
 
 // Same shape + error copy as components/waitlist.tsx — kept in sync deliberately.
 type Status = 'idle' | 'loading' | 'done' | 'error';

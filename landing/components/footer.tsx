@@ -31,13 +31,7 @@ export function Footer() {
           </a>
         </nav>
         <p className="mt-4 text-xs text-text-secondary">
-          © {new Date().getFullYear()} Arsenal Dating · Built by a Gooner, for Gooners. ·{' '}
-          <a
-            href={`${APP_URL}/admin`}
-            className="text-text-secondary transition-colors hover:text-text"
-          >
-            Admin
-          </a>
+          © {new Date().getFullYear()} Arsenal Dating · Built by a Gooner, for Gooners.
         </p>
       </div>
     </footer>
